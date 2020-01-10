@@ -117,7 +117,7 @@ func RunServer() error {
     _ = rest.RunServer(ctx, cfg.GRPCPort, cfg.HTTPPort)
   }()
 
-  return checkGrpc.RunServer(ctx, v1API, cfg.GRPCPort)
+  return teamGrpc.RunServer(ctx, v1API, cfg.GRPCPort)
 }
 
 func initRedis(address string) *cache.Codec {
