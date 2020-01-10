@@ -15,6 +15,20 @@ type repository interface {
   UpsertProject(string, *v1.Project) (int64, error)
 }
 
-type TeamRepository struct {
-  Db *sql.DB
+type teamRepository struct {
+  db *sql.DB
+}
+
+func NewTeamRepository(db *sql.DB) *teamRepository {
+  return &teamRepository{
+    db: db,
+  }
+}
+
+func (r *teamRepository) connect(ctx context.Context) (*sql.Conn, error) {
+  c, err := r.db.Conn(ctx)
+  if err != nil {
+    return nil, status.Error(codes.Unknown, "failed to connect to database-> "+err.Error())
+  }
+  return c, nil
 }
