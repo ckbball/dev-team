@@ -1,0 +1,143 @@
+syntax = "proto3";
+
+package team;
+
+import "google/api/annotations.proto";
+import "protoc-gen-swagger/options/annotations.proto";
+
+option (grpc.gateway.protoc_gen_swagger.options.openapiv2_swagger) = {
+  info: {
+    title: "team service";
+    version: "1.0";
+    contact: {
+      name: "team service";
+      url: "https://github.com/ckbball/dev-team";
+      email: "blah@happy.org";
+    };
+  };
+  schemes: HTTP;
+  schemes: HTTPS;
+  consumes: "application/json";
+  produces: "application/json";
+  responses: {
+    key: "404";
+    value: {
+      description: "Returned when resource doesn't exist";
+      schema: {
+        json_schema: {
+          type: STRING;
+        }
+      }
+    }
+  }
+};
+
+service TeamService {
+  rpc CreateTeam(TeamUpsertRequest) returns (TeamUpsertResponse) {
+    option (google.api.http) = {
+      post: "/v1/teams",
+      body: "*"
+    };
+  }
+
+  rpc DeleteTeam(TeamDeleteRequest) returns (TeamDeleteResponse) {
+    option (google.api.http) = {
+      delete: "/v1/teams/{id}"
+    };
+  }
+
+  rpc AddMember(MemberUpsertRequest) returns (MemberUpsertResponse) {
+    option (google.api.http) = {
+      post: "/v1/teams/{id}/members",
+      body: "*"
+    };
+  }
+
+  rpc RemoveMember(MemberDeleteRequest) returns (MemberDeleteResponse) {
+    option (google.api.http) = {
+      delete: "/v1/teams/{id}/members/{member_number}",
+    };
+  }
+
+  rpc UpsertTeamProject(ProjectUpsertRequest) returns (ProjectUpsertResponse) {
+    option (google.api.http) = {
+      post: "/v1/teams/project/{id}",
+      body: "*"
+    };
+  }
+}
+
+message TeamUpsertRequest {
+  string api = 1;
+  Team team = 2;
+}
+
+message TeamUpsertResponse {
+  string api = 1;
+  string status = 2;
+  string id = 3;
+}
+
+message TeamDeleteRequest {
+  string api = 1;
+  string id = 2;
+}
+
+message TeamDeleteResponse {
+  string api = 1;
+  string status = 2;
+  string count = 3;
+  string id = 4;
+}
+
+message MemberUpsertRequest {
+  string api = 1;
+  string id = 2;
+  string member_id = 3;
+  string role = 4;
+}
+
+message MemberUpsertResponse {
+  string api = 1;
+  string member_number = 2;
+  string status = 3;
+}
+
+message MemberDeleteRequest {
+  string api = 1;
+  string id = 2;
+  string member_number = 3;
+}
+
+message MemberDeleteResponse {
+  string api = 1;
+  string status = 2;
+  string count = 3;
+}
+
+message ProjectUpsertRequest {
+  Project project = 1;
+  string api = 2;
+  string id = 3;
+}
+message ProjectUpsertResponse {
+  string api = 1;
+  string status = 2;
+}
+
+
+message Team {
+  string leader = 1;
+  repeated string members = 2;
+  string name = 3;
+  int32 open_roles = 4;
+  repeated string skills = 5;
+  int32 size = 6;
+}
+
+message Project {
+  string description = 1;
+  repeated string languages = 2;
+  string name = 3;
+  string github_link = 4;
+}
