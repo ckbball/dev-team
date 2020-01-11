@@ -331,6 +331,10 @@
         "size": {
           "type": "integer",
           "format": "int32"
+        },
+        "last_active": {
+          "type": "integer",
+          "format": "int32"
         }
       }
     },

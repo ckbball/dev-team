@@ -125,6 +125,29 @@ message ProjectUpsertResponse {
   string status = 2;
 }
 
+message GetByTeamIdRequest {
+  string api = 1;
+  string id = 2;
+}
+
+message GetByTeamIdResponse {
+  string api = 1;
+  string id = 2;
+  Team team = 3;
+  string status = 4;
+}
+
+message GetByUserIdRequest {
+  string api = 1;
+  string id = 2;
+}
+
+message GetByUserIdResponse {
+  string api = 1;
+  string id = 2;
+  Team team = 3;
+  string status = 4;
+}
 
 message Team {
   string leader = 1;
