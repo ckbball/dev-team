@@ -1,10 +1,10 @@
 package v1
 
 import (
-  "github.com/go-redis/cache/v7"
+//"github.com/go-redis/cache/v7"
 )
 
-type cache interface {
+type appCache interface {
   AddEntry()
   GetEntry()
 }
