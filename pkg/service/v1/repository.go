@@ -4,6 +4,9 @@ import (
   "context"
   "database/sql"
   "errors"
+  "fmt"
+  "os"
+
   v1 "github.com/ckbball/dev-team/pkg/api/v1"
 )
 
@@ -35,19 +38,87 @@ func (r *teamRepository) connect(ctx context.Context) (*sql.Conn, error) {
   return c, nil
 }
 
+// Creates a Team
+// input: context-the current handler context, team-team object from gRPC endpoint handler
+// output ON SUCCESS: string - id of newly inserted team, error - nil
+// output ON FAILURE: string - nil, error - the error object from whatever created the error
 func (r *teamRepository) CreateTeam(ctx context.Context, team *v1.Team) (string, error) {
   // prepare sql statements for teams, skills, members
-  stmt := `INSERT INTO teams (leader, name, open_roles, size, last_active)
+  teamStmt := `INSERT INTO teams (leader, name, open_roles, size, last_active)
   VALUES(?, ?, ?, ?, ?))`
+  memberStmt := `INSERT INTO members (member_id, member_name, team_id) 
+  VALUES %s)`
+  skillStmt := `INSERT INTO skills (skill_name, team_id) 
+  VALUES %s)`
 
   // start transaction
+  tx, err := r.db.Begin()
+  if err != nil {
+    return err
+  }
 
   // insert team into teams table capturing the id
+  result, err := tx.Exec(teamStmt, team.Leader, team.Name, team.OpenRoles, team.Size, team.LastActive)
+  if err != nil {
+    tx.Rollback()
+    return nil, err
+  }
+  // gather the id of the inserted team
+  teamId, err := result.LastInsertId()
+  if err != nil {
+    tx.Rollback()
+    return nil, err
+  }
+
+  // create bulk array insert values.
+  memberStrings := []string{}
+  memberArgs := []interface{}{}
+  for _, w := range team.Members {
+    memberStrings = append(memberStrings, "(?, ?, ?)")
+
+    memberArgs = append(memberArgs, w.Id)
+    memberArgs = append(memberArgs, w.Name)
+    memberArgs = append(memberArgs, teamId)
+  }
+
+  // create member sql statement
+  memberStmt = fmt.Sprintf(memberStmt, strings.Join(memberStrings, ","))
+  fmt.Fprintf(os.Stderr, "memberStmt: %v\n", memberStmt)
 
   // insert members into members table including team_id field
+  _, err = tx.Exec(memberStmt, memberArgs...)
+  if err != nil {
+    tx.Rollback()
+    return nil, err
+  }
+
+  // create bulk array insert values.
+  skillStrings := []string{}
+  skillArgs := []interface{}{}
+  for _, w := range team.Skills {
+    skillStrings = append(skillStrings, "(?, ?)")
+
+    skillArgs = append(skillArgs, w)
+    skillArgs = append(skillArgs, teamId)
+  }
+
+  // create skill sql statement
+  skillStmt = fmt.Sprintf(skillStmt, strings.Join(skillStrings, ","))
+  fmt.Fprintf(os.Stderr, "skillStmt: %v\n", skillStmt)
 
   // insert skills into skills table including team_id field
+  _, err = tx.Exec(skillStmt, skillArgs...)
+  if err != nil {
+    tx.Rollback()
+    return nil, err
+  }
 
-  result, err := r.db.Exec(stmt, team.Leader)
+  // commit transaction
+  err = tx.Commit()
+  if err != nil {
+    return nil, err
+  }
 
+  // return id of newly inserted team and no error
+  return teamId, nil
 }

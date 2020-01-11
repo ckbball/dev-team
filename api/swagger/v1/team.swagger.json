@@ -213,6 +213,17 @@
     }
   },
   "definitions": {
+    "teamMember": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        }
+      }
+    },
     "teamMemberDeleteResponse": {
       "type": "object",
       "properties": {
@@ -312,7 +323,7 @@
         "members": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/definitions/teamMember"
           }
         },
         "name": {

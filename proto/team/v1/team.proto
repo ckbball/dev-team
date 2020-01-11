@@ -151,12 +151,17 @@ message GetByUserIdResponse {
 
 message Team {
   string leader = 1;
-  repeated string members = 2;
+  repeated Member members = 2;
   string name = 3;
   int32 open_roles = 4;
   repeated string skills = 5;
   int32 size = 6;
   int32 last_active = 7;
+}
+
+message Member {
+  string name = 1;
+  string id = 2;
 }
 
 message Project {
