@@ -93,9 +93,7 @@ func RunServer() error {
   }
   defer db.Close()
   // create repository
-  repository := &v1.TeamRepository{
-    Db: db,
-  }
+  repository := v1.NewTeamRepository(db)
   // init pool of connections to redis cluster
   // redisPool := initRedis(cfg.RedisAddress)
 

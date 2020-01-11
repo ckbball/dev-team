@@ -53,10 +53,78 @@ func (s *handler) checkAPI(api string) error {
 /* Team handles api calls to grpc method Team and REST endpoint: /v1/Team
 any error generated or nil if no errors.
 */
-func (s *handler) Team(ctx context.Context, req *v1.Request) (*v1.Response, error) {
+func (s *handler) CreateTeam(ctx context.Context, req *v1.TeamUpsertRequest) (*v1.TeamUpsertResponse, error) {
   // check api version
   if err := s.checkAPI(req.Api); err != nil {
     return nil, err
   }
 
+  return &v1.TeamUpsertResponse{
+    Api:    "v1",
+    Status: "Test",
+  }
+
+}
+
+func (s *handler) DeleteTeam(ctx context.Context, req *v1.TeamDeleteRequest) (*v1.TeamDeleteResponse, error) {
+  // check api version
+  if err := s.checkAPI(req.Api); err != nil {
+    return nil, err
+  }
+  return &v1.TeamDeleteResponse{
+    Api:    "v1",
+    Status: "Test",
+  }
+}
+func (s *handler) AddMember(ctx context.Context, req *v1.MemberUpsertRequest) (*v1.MemberUpsertResponse, error) {
+  // check api version
+  if err := s.checkAPI(req.Api); err != nil {
+    return nil, err
+  }
+  return &v1.MemberUpsertResponse{
+    Api:    "v1",
+    Status: "Test",
+  }
+}
+func (s *handler) RemoveMember(ctx context.Context, req *v1.MemberDeleteRequest) (*v1.MemberDeleteResponse, error) {
+  // check api version
+  if err := s.checkAPI(req.Api); err != nil {
+    return nil, err
+  }
+  return &v1.MemberDeleteResponse{
+    Api:    "v1",
+    Status: "Test",
+  }
+}
+func (s *handler) UpsertTeamProject(ctx context.Context, req *v1.ProjectUpsertRequest) (*v1.ProjectUpsertResponse, error) {
+  // check api version
+  if err := s.checkAPI(req.Api); err != nil {
+    return nil, err
+  }
+  return &v1.ProjectUpsertResponse{
+    Api:    "v1",
+    Status: "Test",
+  }
+}
+
+func (s *handler) GetTeamByTeamId(ctx context.Context, req *v1.GetByTeamIdRequest) (*v1.GetByTeamIdResponse, error) {
+  // check api version
+  if err := s.checkAPI(req.Api); err != nil {
+    return nil, err
+  }
+  return &v1.GetByTeamIdResponse{
+    Api:    "v1",
+    Status: "Test",
+  }
+}
+
+func (s *handler) GetTeamsByUserId(ctx context.Context, req *v1.GetByUserIdRequest) (*v1.GetByUserIdResponse, error) {
+  // check api version
+  if err := s.checkAPI(req.Api); err != nil {
+    return nil, err
+  }
+  return &v1.GetByUserIdResponse{
+    Api:    "v1",
+    Status: "Test",
+  }
 }
