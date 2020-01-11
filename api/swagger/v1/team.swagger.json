@@ -92,6 +92,45 @@
         ]
       }
     },
+    "/v1/teams/users/{id}": {
+      "post": {
+        "operationId": "GetTeamsByUserId",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/teamGetByUserIdResponse"
+            }
+          },
+          "404": {
+            "description": "Returned when resource doesn't exist",
+            "schema": {
+              "type": "string",
+              "format": "string"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/teamGetByUserIdRequest"
+            }
+          }
+        ],
+        "tags": [
+          "TeamService"
+        ]
+      }
+    },
     "/v1/teams/{id}": {
       "delete": {
         "operationId": "DeleteTeam",
@@ -122,6 +161,43 @@
             "in": "query",
             "required": false,
             "type": "string"
+          }
+        ],
+        "tags": [
+          "TeamService"
+        ]
+      },
+      "post": {
+        "operationId": "GetTeamByTeamId",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/teamGetByTeamIdResponse"
+            }
+          },
+          "404": {
+            "description": "Returned when resource doesn't exist",
+            "schema": {
+              "type": "string",
+              "format": "string"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/teamGetByTeamIdRequest"
+            }
           }
         ],
         "tags": [
@@ -213,6 +289,62 @@
     }
   },
   "definitions": {
+    "teamGetByTeamIdRequest": {
+      "type": "object",
+      "properties": {
+        "api": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        }
+      }
+    },
+    "teamGetByTeamIdResponse": {
+      "type": "object",
+      "properties": {
+        "api": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "team": {
+          "$ref": "#/definitions/teamTeam"
+        },
+        "status": {
+          "type": "string"
+        }
+      }
+    },
+    "teamGetByUserIdRequest": {
+      "type": "object",
+      "properties": {
+        "api": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        }
+      }
+    },
+    "teamGetByUserIdResponse": {
+      "type": "object",
+      "properties": {
+        "api": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "team": {
+          "$ref": "#/definitions/teamTeam"
+        },
+        "status": {
+          "type": "string"
+        }
+      }
+    },
     "teamMember": {
       "type": "object",
       "properties": {
