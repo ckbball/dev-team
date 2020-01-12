@@ -13,13 +13,14 @@ import (
 
 func main() {
   // get configuration
-  address := flag.String("server", "http://localhost:8080", "HTTP gateway url, e.g. http://localhost:8080")
+  address := flag.String("server", "http://localhost:8082", "HTTP gateway url, e.g. http://localhost:8082")
   flag.Parse()
 
   t := time.Now().In(time.UTC)
   pfx := t.Format(time.RFC3339Nano)
 
   var body string
+  log.Printf("\nAddress received: %s\n", *address)
 
   // Call CreateTeam
   resp, err := http.Post(*address+"/v1/teams", "application/json", strings.NewReader(fmt.Sprintf(`

@@ -53,23 +53,25 @@ func (r *teamRepository) CreateTeam(ctx context.Context, team *v1.Team) (string,
   skillStmt := `INSERT INTO skills (skill_name, team_id) 
   VALUES %s)`
 
+  fmt.Fprintf(os.Stderr, "In createteam repo\n")
+
   // start transaction
-  tx, err := r.db.Begin()
+  tx, err := r.db.BeginTx(ctx)
   if err != nil {
-    return "", err
+    return "transaction begin", err
   }
 
   // insert team into teams table capturing the id
   result, err := tx.Exec(teamStmt, team.Leader, team.Name, team.OpenRoles, team.Size, team.LastActive)
   if err != nil {
     tx.Rollback()
-    return "", err
+    return "Exec team stmt", err
   }
   // gather the id of the inserted team
   teamId, err := result.LastInsertId()
   if err != nil {
     tx.Rollback()
-    return "", err
+    return "team insertId()", err
   }
 
   // create bulk array insert values.
@@ -91,7 +93,7 @@ func (r *teamRepository) CreateTeam(ctx context.Context, team *v1.Team) (string,
   _, err = tx.Exec(memberStmt, memberArgs...)
   if err != nil {
     tx.Rollback()
-    return "", err
+    return "Exec membrt stmt", err
   }
 
   // create bulk array insert values.
@@ -112,13 +114,13 @@ func (r *teamRepository) CreateTeam(ctx context.Context, team *v1.Team) (string,
   _, err = tx.Exec(skillStmt, skillArgs...)
   if err != nil {
     tx.Rollback()
-    return "", err
+    return "Exec skill stmt", err
   }
 
   // commit transaction
   err = tx.Commit()
   if err != nil {
-    return "", err
+    return "Commit()", err
   }
 
   // return id of newly inserted team and no error

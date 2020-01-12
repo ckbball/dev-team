@@ -92,6 +92,12 @@ func RunServer() error {
     return fmt.Errorf("failed to open database: %v", err)
   }
   defer db.Close()
+  db.SetMaxIdleConns(10)
+  err = db.Ping()
+  if err != nil {
+    return fmt.Errorf("failed to ping database: %v", err)
+  }
+
   // create repository
   repository := v1.NewTeamRepository(db)
   // init pool of connections to redis cluster

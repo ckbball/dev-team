@@ -64,8 +64,10 @@ func (s *handler) CreateTeam(ctx context.Context, req *v1.TeamUpsertRequest) (*v
 
   newId, err := s.repo.CreateTeam(ctx, req.Team)
   if err != nil {
+    fmt.Fprintf(os.Stderr, "error from Repo CreateTeam: %v\n", newId)
     return nil, err
   }
+  fmt.Fprintf(os.Stderr, "Does repo work?\n")
 
   // publish team_created Event here
 
