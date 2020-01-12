@@ -1,7 +1,7 @@
 package main
 
 import (
-  //"encoding/json"
+  "encoding/json"
   "flag"
   "fmt"
   "io/ioutil"
@@ -48,6 +48,20 @@ func main() {
     body = string(bodyBytes)
   }
   log.Printf("CreateTeam response: Code=%d, Body=%s\n\n", resp.StatusCode, body)
+
+  var upsertTeam struct {
+    Api    string `json:"api"`
+    Status string `json:"status"`
+    Id     string `json:"id"`
+  }
+  err = json.Unmarshal(bodyBytes, &upsertTeam)
+  if err != nil {
+    log.Fatalf("failed to unmarshal JSON response of CreateTeam method: %v", err)
+    fmt.Println("error:", err)
+  }
+  log.Printf("upsertTeam struct: %s\n", upsertTeam)
+
+  createdTeamId := upsertTeam.Id
 
   /*
      // Call UpdateUser with correct info
@@ -164,7 +178,7 @@ func main() {
      log.Printf("GetById response: Code=%d, Body=%s\n\n", resp.StatusCode, body)
   */
   // Call DeleteTeam
-  req, err := http.NewRequest("DELETE", fmt.Sprintf("%s%s/%s", *address, "/v1/teams", "1"), nil)
+  req, err := http.NewRequest("DELETE", fmt.Sprintf("%s%s/%s", *address, "/v1/teams", createdTeamId), nil)
   resp, err = http.DefaultClient.Do(req)
   if err != nil {
     log.Fatalf("failed to call DeleteTeam method: %v", err)
@@ -179,7 +193,7 @@ func main() {
   log.Printf("DeleteTeam response: Code=%d, Body=%s\n\n", resp.StatusCode, body)
 
   // Call Remove Member
-  req, err = http.NewRequest("DELETE", fmt.Sprintf("%s%s/%s/%s/%s", *address, "/v1/teams", "1", "members", "2"), nil)
+  req, err = http.NewRequest("DELETE", fmt.Sprintf("%s%s/%s/%s/%s", *address, "/v1/teams", createdTeamId, "members", "2"), nil)
   resp, err = http.DefaultClient.Do(req)
   if err != nil {
     log.Fatalf("failed to call RemoveMember method: %v", err)
