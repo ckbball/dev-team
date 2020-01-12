@@ -491,8 +491,17 @@
         "status": {
           "type": "string"
         },
-        "count": {
-          "type": "string"
+        "teams": {
+          "type": "string",
+          "format": "int64"
+        },
+        "members": {
+          "type": "string",
+          "format": "int64"
+        },
+        "skills": {
+          "type": "string",
+          "format": "int64"
         },
         "id": {
           "type": "string"

@@ -100,8 +100,10 @@ message TeamDeleteRequest {
 message TeamDeleteResponse {
   string api = 1;
   string status = 2;
-  string count = 3;
-  string id = 4;
+  int64 teams = 3;
+  int64 members = 4;
+  int64 skills = 5;
+  string id = 6;
 }
 
 message MemberUpsertRequest {
