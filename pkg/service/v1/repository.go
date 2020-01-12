@@ -14,7 +14,7 @@ import (
 
 type repository interface {
   CreateTeam(context.Context, *v1.Team) (string, error)
-  //DeleteTeam(context.Context, string) (int64, error)
+  DeleteTeam(context.Context, string) (int64, error)
   //GetTeamByTeamId(context.Context, string) (*v1.Team, error)
   // GetTeamsByUserId(context.Context, string) ([]v1.Team, error)
   //AddMember(context.Context, string, string) (string, error)
@@ -122,4 +122,72 @@ func (r *teamRepository) CreateTeam(ctx context.Context, team *v1.Team) (string,
 
   // return id of newly inserted team and no error
   return strconv.FormatInt(teamId, 10), nil
+}
+
+// Deletes a Team
+// input: context-the current handler context, team-team object from gRPC endpoint handler
+// output ON SUCCESS: string - id of newly inserted team, error - nil
+// output ON FAILURE: string - nil, error - the error object from whatever created the error
+func (r *teamRepository) DeleteTeam(ctx context.Context, id string) (int64, int64, int64, error) {
+  // prepare sql statements for teams, skills, members
+  teamStmt := `DELETE FROM teams WHERE id=?`
+  memberStmt := `DELETE FROM members WHERE team_id=?`
+  skillStmt := `DELETE FROM skills WHERE team_id=?`
+
+  fmt.Fprintf(os.Stderr, "In createteam repo\n")
+  idAsInt := strconv.Atoi(id)
+
+  // start transaction
+  tx, err := r.db.BeginTx(ctx, &sql.TxOptions{})
+  if err != nil {
+    return "transaction begin", err
+  }
+
+  // delete team
+  result, err := tx.Exec(teamStmt, idAsInt)
+  if err != nil {
+    tx.Rollback()
+    return "Exec team stmt", err
+  }
+  // gather the num of rows deleted
+  teamRows, err := result.RowsAffected()
+  if err != nil {
+    tx.Rollback()
+    return "team RowsAffected()", err
+  }
+
+  // insert team into teams table capturing the id
+  memResult, err := tx.Exec(memberStmt, idAsInt)
+  if err != nil {
+    tx.Rollback()
+    return "Exec team stmt", err
+  }
+  // gather the id of the inserted team
+  memRows, err := memResult.RowsAffected()
+  if err != nil {
+    tx.Rollback()
+    return "team RowsAffected()", err
+  }
+
+  // insert team into teams table capturing the id
+  skillResult, err := tx.Exec(skillStmt, idAsInt)
+  if err != nil {
+    tx.Rollback()
+    return "Exec team stmt", err
+  }
+  // gather the id of the inserted team
+  skillRows, err := skillResult.RowsAffected()
+  if err != nil {
+    tx.Rollback()
+    return "team RowsAffected()", err
+  }
+
+  // commit transaction
+  err = tx.Commit()
+  if err != nil {
+    return "Commit()", err
+  }
+
+  // return number of rows deleted per object
+  return teamRows, memRows, skillRows, nil
 }

@@ -73,7 +73,7 @@ func (s *handler) CreateTeam(ctx context.Context, req *v1.TeamUpsertRequest) (*v
 
   return &v1.TeamUpsertResponse{
     Api:    "v1",
-    Status: "Test",
+    Status: "Upserted",
     Id:     newId,
   }, nil
 
@@ -84,9 +84,25 @@ func (s *handler) DeleteTeam(ctx context.Context, req *v1.TeamDeleteRequest) (*v
   if err := s.checkAPI(req.Api); err != nil {
     return nil, err
   }
+
+  fmt.Fprintf(os.Stderr, "id from request: %v\n", req.Id)
+
+  teamRows, memRows, skillRows, err := s.repo.CreateTeam(ctx, req.Id)
+  if err != nil {
+    fmt.Fprintf(os.Stderr, "error from Repo CreateTeam: %v\n", newId)
+    return nil, err
+  }
+  fmt.Fprintf(os.Stderr, "Does repo work?\n")
+
+  // publish team_created Event here
+
   return &v1.TeamDeleteResponse{
-    Api:    "v1",
-    Status: "Test",
+    Api:     "v1",
+    Status:  "Deleted",
+    Teams:   teamRows,
+    Skills:  skillRows,
+    Members: memRows,
+    Id:      req.Id,
   }, nil
 }
 func (s *handler) AddMember(ctx context.Context, req *v1.MemberUpsertRequest) (*v1.MemberUpsertResponse, error) {
