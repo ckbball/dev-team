@@ -56,7 +56,7 @@ func (r *teamRepository) CreateTeam(ctx context.Context, team *v1.Team) (string,
   fmt.Fprintf(os.Stderr, "In createteam repo\n")
 
   // start transaction
-  tx, err := r.db.BeginTx(ctx)
+  tx, err := r.db.BeginTx(ctx, &sql.TxOptions{})
   if err != nil {
     return "transaction begin", err
   }

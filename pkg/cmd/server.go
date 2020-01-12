@@ -81,10 +81,10 @@ func RunServer() error {
 
   // for non localhost db %s:%s@tcp(%s)/%s?%s
   // currently set for localhost
-  dsn := fmt.Sprintf("%s:%s@/%s?%s",
+  dsn := fmt.Sprintf("%s:%s@tcp(%s)/%s?%s",
     cfg.DatastoreDBUser,
     cfg.DatastoreDBPassword,
-    // cfg.DatastoreDBHost,
+    cfg.DatastoreDBHost,
     cfg.DatastoreDBSchema,
     param)
   db, err := sql.Open("mysql", dsn)
