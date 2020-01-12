@@ -32,7 +32,7 @@ func main() {
         "open_roles": 3,
         "last_active": 0,
         "size": 3,
-        "members": [{"name":"goja@yahoo.com", "id":"goja"}, {"name":"linka@gmail.com", "id":"linka"}],
+        "members": [{"name":"goja@yahoo.com", "id":1}, {"name":"linka@gmail.com", "id":2}],
         "skills": ["frontend", "design"]
       }
     }

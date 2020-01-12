@@ -175,7 +175,7 @@ message Team {
 
 message Member {
   string name = 1;
-  string id = 2;
+  int32 id = 2;
 }
 
 message Project {

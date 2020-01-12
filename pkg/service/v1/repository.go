@@ -46,12 +46,9 @@ func (r *teamRepository) connect(ctx context.Context) (*sql.Conn, error) {
 // output ON FAILURE: string - nil, error - the error object from whatever created the error
 func (r *teamRepository) CreateTeam(ctx context.Context, team *v1.Team) (string, error) {
   // prepare sql statements for teams, skills, members
-  teamStmt := `INSERT INTO teams (leader, name, open_roles, size, last_active)
-  VALUES(?, ?, ?, ?, ?))`
-  memberStmt := `INSERT INTO members (member_id, member_name, team_id) 
-  VALUES %s)`
-  skillStmt := `INSERT INTO skills (skill_name, team_id) 
-  VALUES %s)`
+  teamStmt := `INSERT INTO teams (leader, team_name, open_roles, size, last_active) VALUES(?, ?, ?, ?, ?)`
+  memberStmt := `INSERT INTO members (member_id, member_name, team_id) VALUES %s`
+  skillStmt := `INSERT INTO skills (skill_name, team_id) VALUES %s`
 
   fmt.Fprintf(os.Stderr, "In createteam repo\n")
 
@@ -93,7 +90,7 @@ func (r *teamRepository) CreateTeam(ctx context.Context, team *v1.Team) (string,
   _, err = tx.Exec(memberStmt, memberArgs...)
   if err != nil {
     tx.Rollback()
-    return "Exec membrt stmt", err
+    return "Exec member stmt", err
   }
 
   // create bulk array insert values.
