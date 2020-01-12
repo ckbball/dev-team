@@ -25,27 +25,28 @@ func main() {
   resp, err := http.Post(*address+"/v1/teams", "application/json", strings.NewReader(fmt.Sprintf(`
     {
       "api":"v1",
-      "user": {
-        "email": "loola@gmail.com",
-        "password": "haha",
-        "username": "loolala",
+      "team": {
+        "leader": "loola@gmail.com",
+        "name": "loola",
+        "open_roles": 3,
         "last_active": 0,
-        "experience": "beginner",
-        "languages": ["haskell", "python", "csharp"]
+        "size": 3,
+        "members": [{"name":"goja@yahoo.com", "id":"goja"}, {"name":"linka@gmail.com", "id":"linka"}],
+        "skills": ["frontend", "design"]
       }
     }
   `, pfx, pfx, pfx)))
   if err != nil {
-    log.Fatalf("failed to call CreateUser method: %v", err)
+    log.Fatalf("failed to call CreateTeam method: %v", err)
   }
   bodyBytes, err := ioutil.ReadAll(resp.Body)
   resp.Body.Close()
   if err != nil {
-    body = fmt.Sprintf("failed read CreateUser response body: %v", err)
+    body = fmt.Sprintf("failed read CreateTeam response body: %v", err)
   } else {
     body = string(bodyBytes)
   }
-  log.Printf("CreateUser response: Code=%d, Body=%s\n\n", resp.StatusCode, body)
+  log.Printf("CreateTeam response: Code=%d, Body=%s\n\n", resp.StatusCode, body)
 
   /*
      // Call UpdateUser with correct info

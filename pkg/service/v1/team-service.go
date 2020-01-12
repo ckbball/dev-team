@@ -3,10 +3,11 @@ package v1
 import (
   "context"
   //"errors"
-  //"fmt"
+  "fmt"
   // "log"
   // "strconv"
   // "time"
+  "os"
 
   //"github.com/golang/protobuf/ptypes"
   // "encoding/json"
@@ -59,9 +60,19 @@ func (s *handler) CreateTeam(ctx context.Context, req *v1.TeamUpsertRequest) (*v
     return nil, err
   }
 
+  fmt.Fprintf(os.Stderr, "team from request: %v\n", req.Team)
+
+  newId, err := s.repo.CreateTeam(ctx, req.Team)
+  if err != nil {
+    return nil, err
+  }
+
+  // publish team_created Event here
+
   return &v1.TeamUpsertResponse{
     Api:    "v1",
     Status: "Test",
+    Id:     newId,
   }, nil
 
 }
