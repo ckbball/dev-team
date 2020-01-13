@@ -87,9 +87,9 @@ func (s *handler) DeleteTeam(ctx context.Context, req *v1.TeamDeleteRequest) (*v
 
   fmt.Fprintf(os.Stderr, "id from request: %v\n", req.Id)
 
-  teamRows, memRows, skillRows, err := s.repo.CreateTeam(ctx, req.Id)
+  teamRows, memRows, skillRows, err := s.repo.DeleteTeam(ctx, req.Id)
   if err != nil {
-    fmt.Fprintf(os.Stderr, "error from Repo CreateTeam: %v\n", newId)
+    fmt.Fprintf(os.Stderr, "error from Repo DeleteTeam: %v\n", req.Id)
     return nil, err
   }
   fmt.Fprintf(os.Stderr, "Does repo work?\n")
@@ -110,9 +110,23 @@ func (s *handler) AddMember(ctx context.Context, req *v1.MemberUpsertRequest) (*
   if err := s.checkAPI(req.Api); err != nil {
     return nil, err
   }
+
+  // add in here somewhere maybe in future to get new member's name from their account as an additional
+  // field
+
+  _, err := s.repo.AddMember(ctx, req.Id, req.MemberId)
+  if err != nil {
+    fmt.Fprintf(os.Stderr, "error from Repo AddMember: %v\n", req.Id)
+    return nil, err
+  }
+  fmt.Fprintf(os.Stderr, "Does repo work?\n")
+
+  // publish team_created Event here
+
   return &v1.MemberUpsertResponse{
-    Api:    "v1",
-    Status: "Test",
+    Api:          "v1",
+    Status:       "Deleted",
+    MemberNumber: 1,
   }, nil
 }
 func (s *handler) RemoveMember(ctx context.Context, req *v1.MemberDeleteRequest) (*v1.MemberDeleteResponse, error) {
