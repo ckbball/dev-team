@@ -226,7 +226,7 @@ func (r *teamRepository) AddMember(ctx context.Context, req *v1.MemberUpsertRequ
   // commit transaction
   err = tx.Commit()
   if err != nil {
-    return -1, err
+    return "", err
   }
   return strconv.FormatInt(memId, 10), nil
 }
@@ -277,20 +277,23 @@ func (r *teamRepository) UpsertProject(ctx context.Context, teamId string, proje
   // start transaction
   tx, err := r.db.BeginTx(ctx, &sql.TxOptions{})
   if err != nil {
-    return "transaction begin", err
+    fmt.Fprintf(os.Stderr, "error in BeginTx")
+    return -1, err
   }
 
   // insert project into projects table capturing the id
   result, err := tx.Exec(projStmt, project.Description, project.Name, project.GithubLink, teamId, project.Complexity, project.Duration)
   if err != nil {
+    fmt.Fprintf(os.Stderr, "error from Repo UpsertProject: %v\n", req.Id)
     tx.Rollback()
-    return "Exec project stmt", err
+    return -1, err
   }
   // gather the id of the inserted project
   projectId, err := result.LastInsertId()
   if err != nil {
+    fmt.Fprintf(os.Stderr, "error from Repo UpsertProject: %v\n", req.Id)
     tx.Rollback()
-    return "project insertId()", err
+    return -1, err
   }
 
   // create bulk array insert values.
@@ -310,14 +313,16 @@ func (r *teamRepository) UpsertProject(ctx context.Context, teamId string, proje
   // insert langs into langs table including team_id field
   _, err = tx.Exec(langStmt, langArgs...)
   if err != nil {
+    fmt.Fprintf(os.Stderr, "error from Repo UpsertProject: %v\n", req.Id)
     tx.Rollback()
-    return "Exec lang stmt", err
+    return -1, err
   }
 
   // commit transaction
   err = tx.Commit()
   if err != nil {
-    return "Commit()", err
+    fmt.Fprintf(os.Stderr, "error from Repo UpsertProject: %v\n", req.Id)
+    return -1, err
   }
 
   // return id of newly inserted team and no error
