@@ -154,7 +154,7 @@ func (r *teamRepository) DeleteTeam(ctx context.Context, id string) (int64, int6
     return -1, -1, -1, err
   }
   // gather the number of rows deleted
-  _, err := langResult.RowsAffected()
+  _, err = langResult.RowsAffected()
   if err != nil {
     tx.Rollback()
     return -1, -1, -1, err
@@ -167,7 +167,7 @@ func (r *teamRepository) DeleteTeam(ctx context.Context, id string) (int64, int6
     return -1, -1, -1, err
   }
   // gather the number of rows deleted
-  _, err := projResult.RowsAffected()
+  _, err = projResult.RowsAffected()
   if err != nil {
     tx.Rollback()
     return -1, -1, -1, err
