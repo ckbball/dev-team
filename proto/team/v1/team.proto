@@ -150,6 +150,7 @@ message GetByTeamIdResponse {
   string id = 2;
   Team team = 3;
   string status = 4;
+  Project project = 5;
 }
 
 message GetByUserIdRequest {
