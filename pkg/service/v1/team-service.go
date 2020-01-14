@@ -162,9 +162,9 @@ func (s *handler) UpsertTeamProject(ctx context.Context, req *v1.ProjectUpsertRe
   // add in here somewhere maybe in future to get new member's name from their account as an additional
   // field
 
-  _, err := s.repo.AddMember(ctx, req.Id, req.MemberId)
+  _, err := s.repo.UpsertProject(ctx, req.Id, req.Project)
   if err != nil {
-    fmt.Fprintf(os.Stderr, "error from Repo AddMember: %v\n", req.Id)
+    fmt.Fprintf(os.Stderr, "error from Repo UpsertProject: %v\n", req.Id)
     return nil, err
   }
   fmt.Fprintf(os.Stderr, "Does repo work?\n")
@@ -173,7 +173,7 @@ func (s *handler) UpsertTeamProject(ctx context.Context, req *v1.ProjectUpsertRe
 
   return &v1.ProjectUpsertResponse{
     Api:    "v1",
-    Status: "Test",
+    Status: "Project Upserted",
   }, nil
 }
 

@@ -266,3 +266,7 @@ func (r *teamRepository) RemoveMember(ctx context.Context, teamId string, member
   }
   return memRows, nil
 }
+
+func (r *teamRepository) UpsertProject(ctx context.Context, teamId string, project *v1.Project) (int64, error) {
+
+}
