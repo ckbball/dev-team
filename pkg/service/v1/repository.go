@@ -299,7 +299,7 @@ func (r *teamRepository) UpsertProject(ctx context.Context, teamId string, proje
   // create bulk array insert values.
   langStrings := []string{}
   langArgs := []interface{}{}
-  for _, w := range team.langs {
+  for _, w := range project.Languages {
     langStrings = append(langStrings, "(?, ?)")
 
     langArgs = append(langArgs, w)
