@@ -135,6 +135,8 @@ func (r *teamRepository) DeleteTeam(ctx context.Context, id string) (int64, int6
   teamStmt := `DELETE FROM teams WHERE id=?`
   memberStmt := `DELETE FROM members WHERE team_id=?`
   skillStmt := `DELETE FROM skills WHERE team_id=?`
+  projStmt := `DELETE FROM projects WHERE team_id=?`
+  langStmt := `DELETE FROM languages WHERE team_id=?`
 
   fmt.Fprintf(os.Stderr, "In createteam repo\n")
   idAsInt, _ := strconv.Atoi(id)
@@ -142,6 +144,32 @@ func (r *teamRepository) DeleteTeam(ctx context.Context, id string) (int64, int6
   // start transaction
   tx, err := r.db.BeginTx(ctx, &sql.TxOptions{})
   if err != nil {
+    return -1, -1, -1, err
+  }
+
+  // delete all languages of a specific team
+  langResult, err := tx.Exec(langStmt, idAsInt)
+  if err != nil {
+    tx.Rollback()
+    return -1, -1, -1, err
+  }
+  // gather the number of rows deleted
+  _, err := langResult.RowsAffected()
+  if err != nil {
+    tx.Rollback()
+    return -1, -1, -1, err
+  }
+
+  // delete all projects of a specific team
+  projResult, err := tx.Exec(projStmt, idAsInt)
+  if err != nil {
+    tx.Rollback()
+    return -1, -1, -1, err
+  }
+  // gather the number of rows deleted
+  _, err := projResult.RowsAffected()
+  if err != nil {
+    tx.Rollback()
     return -1, -1, -1, err
   }
 
@@ -210,8 +238,10 @@ func (r *teamRepository) AddMember(ctx context.Context, req *v1.MemberUpsertRequ
     return "", err
   }
 
+  convert, _ := strconv.ParseInt(req.MemberId, 10, 64)
+
   // insert team into teams table capturing the id
-  memResult, err := tx.Exec(memberStmt, strconv.ParseInt(req.MemberId, 10, 64), req.Id, req.MemberEmail, req.Role)
+  memResult, err := tx.Exec(memberStmt, convert, req.Id, req.MemberEmail, req.Role)
   if err != nil {
     tx.Rollback()
     return "", err
@@ -270,7 +300,7 @@ func (r *teamRepository) RemoveMember(ctx context.Context, teamId string, member
 func (r *teamRepository) UpsertProject(ctx context.Context, teamId string, project *v1.Project) (int64, error) {
   // prepare sql statements
   projStmt := `INSERT INTO projects (goal, project_name, github_link, team_id, complexity, duration) VALUES(?, ?, ?, ?, ?, ?)`
-  langStmt := `INSERT INTO languages (lang_name, project_id) VALUES %s`
+  langStmt := `INSERT INTO languages (lang_name, team_id) VALUES %s`
 
   fmt.Fprintf(os.Stderr, "In createteam repo\n")
 
@@ -303,7 +333,7 @@ func (r *teamRepository) UpsertProject(ctx context.Context, teamId string, proje
     langStrings = append(langStrings, "(?, ?)")
 
     langArgs = append(langArgs, w)
-    langArgs = append(langArgs, projectId)
+    langArgs = append(langArgs, teamId)
   }
 
   // create lang sql statement

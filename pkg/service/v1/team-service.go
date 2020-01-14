@@ -125,7 +125,7 @@ func (s *handler) AddMember(ctx context.Context, req *v1.MemberUpsertRequest) (*
 
   return &v1.MemberUpsertResponse{
     Api:          "v1",
-    Status:       "Deleted",
+    Status:       "Upserted",
     MemberNumber: newId,
   }, nil
 }
