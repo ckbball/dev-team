@@ -67,7 +67,7 @@ func main() {
   resp, err = http.Post(*address+"/v1/teams/"+createdTeamId+"/members", "application/json", strings.NewReader(fmt.Sprintf(`
     {
       "api":"v1",
-      "member_id": 3,
+      "member_id": "3",
       "member_email": "freddy@yahoo.com",
       "role": "frontend"
     }

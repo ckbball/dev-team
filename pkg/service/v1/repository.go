@@ -47,7 +47,7 @@ func (r *teamRepository) connect(ctx context.Context) (*sql.Conn, error) {
 func (r *teamRepository) CreateTeam(ctx context.Context, team *v1.Team) (string, error) {
   // prepare sql statements for teams, skills, members
   teamStmt := `INSERT INTO teams (leader, team_name, open_roles, size, last_active) VALUES(?, ?, ?, ?, ?)`
-  memberStmt := `INSERT INTO members (user_id, member_name, team_id, member_role) VALUES %s`
+  memberStmt := `INSERT INTO members (user_id, member_email, team_id, member_role) VALUES %s`
   skillStmt := `INSERT INTO skills (skill_name, team_id) VALUES %s`
 
   fmt.Fprintf(os.Stderr, "In createteam repo\n")
@@ -211,7 +211,7 @@ func (r *teamRepository) AddMember(ctx context.Context, req *v1.MemberUpsertRequ
   }
 
   // insert team into teams table capturing the id
-  memResult, err := tx.Exec(memberStmt, req.MemberId, req.Id, req.MemberEmail, req.Role)
+  memResult, err := tx.Exec(memberStmt, strconv.ParseInt(req.MemberId, 10, 64), req.Id, req.MemberEmail, req.Role)
   if err != nil {
     tx.Rollback()
     return "", err
