@@ -28,11 +28,11 @@ func main() {
       "api":"v1",
       "team": {
         "leader": "loola@gmail.com",
-        "name": "loola",
+        "name": "kappa",
         "open_roles": 3,
         "last_active": 0,
         "size": 3,
-        "members": [{"name":"goja@yahoo.com", "id":1, "role":"backend"}, {"name":"linka@gmail.com", "id":2, "role":"backend"}],
+        "members": [{"email":"goja@yahoo.com", "id":1, "role":"backend"}, {"email":"linka@gmail.com", "id":2, "role":"backend"}],
         "skills": ["frontend", "design"]
       }
     }
@@ -64,7 +64,7 @@ func main() {
   createdTeamId := upsertTeam.Id
 
   // Call AddMember
-  resp, err = http.Post(*address+"/v1/teams"+createdTeamId+"/members", "application/json", strings.NewReader(fmt.Sprintf(`
+  resp, err = http.Post(*address+"/v1/teams/"+createdTeamId+"/members", "application/json", strings.NewReader(fmt.Sprintf(`
     {
       "api":"v1",
       "member_id": 3,
@@ -75,7 +75,7 @@ func main() {
   if err != nil {
     log.Fatalf("failed to call AddMember method: %v", err)
   }
-  bodyBytes, err := ioutil.ReadAll(resp.Body)
+  bodyBytes, err = ioutil.ReadAll(resp.Body)
   resp.Body.Close()
   if err != nil {
     body = fmt.Sprintf("failed read AddMember response body: %v", err)
@@ -100,7 +100,7 @@ func main() {
   log.Printf("GetTeamByTeamId response: Code=%d, Body=%s\n\n", resp.StatusCode, body)
 
   // Call UpsertProject
-  resp, err = http.Post(*address+"/v1/teams"+createdTeamId+"/project", "application/json", strings.NewReader(fmt.Sprintf(`
+  resp, err = http.Post(*address+"/v1/teams/"+createdTeamId+"/project", "application/json", strings.NewReader(fmt.Sprintf(`
     {
       "api":"v1",
       "project": {
@@ -116,7 +116,7 @@ func main() {
   if err != nil {
     log.Fatalf("failed to call UpsertProject method: %v", err)
   }
-  bodyBytes, err := ioutil.ReadAll(resp.Body)
+  bodyBytes, err = ioutil.ReadAll(resp.Body)
   resp.Body.Close()
   if err != nil {
     body = fmt.Sprintf("failed read UpsertProject response body: %v", err)
@@ -141,7 +141,7 @@ func main() {
   log.Printf("RemoveMember response: Code=%d, Body=%s\n\n", resp.StatusCode, body)
 
   // Call GetTeamsByUserId
-  req, err := http.NewRequest("GET", fmt.Sprintf("%s%s", *address, "/v1/teams/users/2"), nil)
+  req, err = http.NewRequest("GET", fmt.Sprintf("%s%s", *address, "/v1/teams/users/2"), nil)
   resp, err = http.DefaultClient.Do(req)
   if err != nil {
     log.Fatalf("failed to call GetTeamsByUserId method: %v", err)
