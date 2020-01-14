@@ -53,45 +53,6 @@
         ]
       }
     },
-    "/v1/teams/users/{id}": {
-      "post": {
-        "operationId": "GetTeamsByUserId",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/teamGetByUserIdResponse"
-            }
-          },
-          "404": {
-            "description": "Returned when resource doesn't exist",
-            "schema": {
-              "type": "string",
-              "format": "string"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/teamGetByUserIdRequest"
-            }
-          }
-        ],
-        "tags": [
-          "TeamService"
-        ]
-      }
-    },
     "/v1/teams/{id}": {
       "delete": {
         "operationId": "DeleteTeam",
@@ -122,43 +83,6 @@
             "in": "query",
             "required": false,
             "type": "string"
-          }
-        ],
-        "tags": [
-          "TeamService"
-        ]
-      },
-      "post": {
-        "operationId": "GetTeamByTeamId",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/teamGetByTeamIdResponse"
-            }
-          },
-          "404": {
-            "description": "Returned when resource doesn't exist",
-            "schema": {
-              "type": "string",
-              "format": "string"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/teamGetByTeamIdRequest"
-            }
           }
         ],
         "tags": [
@@ -286,20 +210,83 @@
           "TeamService"
         ]
       }
+    },
+    "/{api}/teams/users/{id}": {
+      "get": {
+        "operationId": "GetTeamsByUserId",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/teamGetByUserIdResponse"
+            }
+          },
+          "404": {
+            "description": "Returned when resource doesn't exist",
+            "schema": {
+              "type": "string",
+              "format": "string"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "api",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "TeamService"
+        ]
+      }
+    },
+    "/{api}/teams/{id}": {
+      "get": {
+        "operationId": "GetTeamByTeamId",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/teamGetByTeamIdResponse"
+            }
+          },
+          "404": {
+            "description": "Returned when resource doesn't exist",
+            "schema": {
+              "type": "string",
+              "format": "string"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "api",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "TeamService"
+        ]
+      }
     }
   },
   "definitions": {
-    "teamGetByTeamIdRequest": {
-      "type": "object",
-      "properties": {
-        "api": {
-          "type": "string"
-        },
-        "id": {
-          "type": "string"
-        }
-      }
-    },
     "teamGetByTeamIdResponse": {
       "type": "object",
       "properties": {
@@ -313,17 +300,6 @@
           "$ref": "#/definitions/teamTeam"
         },
         "status": {
-          "type": "string"
-        }
-      }
-    },
-    "teamGetByUserIdRequest": {
-      "type": "object",
-      "properties": {
-        "api": {
-          "type": "string"
-        },
-        "id": {
           "type": "string"
         }
       }
@@ -348,12 +324,15 @@
     "teamMember": {
       "type": "object",
       "properties": {
-        "name": {
+        "email": {
           "type": "string"
         },
         "id": {
           "type": "integer",
           "format": "int32"
+        },
+        "role": {
+          "type": "string"
         }
       }
     },
@@ -381,6 +360,9 @@
           "type": "string"
         },
         "member_id": {
+          "type": "string"
+        },
+        "member_email": {
           "type": "string"
         },
         "role": {
@@ -421,7 +403,8 @@
           "type": "string"
         },
         "complexity": {
-          "type": "string"
+          "type": "integer",
+          "format": "int32"
         },
         "duration": {
           "type": "integer",

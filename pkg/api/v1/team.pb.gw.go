@@ -369,20 +369,23 @@ func request_TeamService_GetTeamByTeamId_0(ctx context.Context, marshaler runtim
 	var protoReq GetByTeamIdRequest
 	var metadata runtime.ServerMetadata
 
-	newReader, berr := utilities.IOReaderFactory(req.Body)
-	if berr != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", berr)
-	}
-	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq); err != nil && err != io.EOF {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
-	}
-
 	var (
 		val string
 		ok  bool
 		err error
 		_   = err
 	)
+
+	val, ok = pathParams["api"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "api")
+	}
+
+	protoReq.Api, err = runtime.String(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "api", err)
+	}
 
 	val, ok = pathParams["id"]
 	if !ok {
@@ -404,20 +407,23 @@ func local_request_TeamService_GetTeamByTeamId_0(ctx context.Context, marshaler 
 	var protoReq GetByTeamIdRequest
 	var metadata runtime.ServerMetadata
 
-	newReader, berr := utilities.IOReaderFactory(req.Body)
-	if berr != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", berr)
-	}
-	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq); err != nil && err != io.EOF {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
-	}
-
 	var (
 		val string
 		ok  bool
 		err error
 		_   = err
 	)
+
+	val, ok = pathParams["api"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "api")
+	}
+
+	protoReq.Api, err = runtime.String(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "api", err)
+	}
 
 	val, ok = pathParams["id"]
 	if !ok {
@@ -439,20 +445,23 @@ func request_TeamService_GetTeamsByUserId_0(ctx context.Context, marshaler runti
 	var protoReq GetByUserIdRequest
 	var metadata runtime.ServerMetadata
 
-	newReader, berr := utilities.IOReaderFactory(req.Body)
-	if berr != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", berr)
-	}
-	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq); err != nil && err != io.EOF {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
-	}
-
 	var (
 		val string
 		ok  bool
 		err error
 		_   = err
 	)
+
+	val, ok = pathParams["api"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "api")
+	}
+
+	protoReq.Api, err = runtime.String(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "api", err)
+	}
 
 	val, ok = pathParams["id"]
 	if !ok {
@@ -474,20 +483,23 @@ func local_request_TeamService_GetTeamsByUserId_0(ctx context.Context, marshaler
 	var protoReq GetByUserIdRequest
 	var metadata runtime.ServerMetadata
 
-	newReader, berr := utilities.IOReaderFactory(req.Body)
-	if berr != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", berr)
-	}
-	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq); err != nil && err != io.EOF {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
-	}
-
 	var (
 		val string
 		ok  bool
 		err error
 		_   = err
 	)
+
+	val, ok = pathParams["api"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "api")
+	}
+
+	protoReq.Api, err = runtime.String(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "api", err)
+	}
 
 	val, ok = pathParams["id"]
 	if !ok {
@@ -610,7 +622,7 @@ func RegisterTeamServiceHandlerServer(ctx context.Context, mux *runtime.ServeMux
 
 	})
 
-	mux.Handle("POST", pattern_TeamService_GetTeamByTeamId_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("GET", pattern_TeamService_GetTeamByTeamId_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
@@ -630,7 +642,7 @@ func RegisterTeamServiceHandlerServer(ctx context.Context, mux *runtime.ServeMux
 
 	})
 
-	mux.Handle("POST", pattern_TeamService_GetTeamsByUserId_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("GET", pattern_TeamService_GetTeamsByUserId_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
@@ -791,7 +803,7 @@ func RegisterTeamServiceHandlerClient(ctx context.Context, mux *runtime.ServeMux
 
 	})
 
-	mux.Handle("POST", pattern_TeamService_GetTeamByTeamId_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("GET", pattern_TeamService_GetTeamByTeamId_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
@@ -811,7 +823,7 @@ func RegisterTeamServiceHandlerClient(ctx context.Context, mux *runtime.ServeMux
 
 	})
 
-	mux.Handle("POST", pattern_TeamService_GetTeamsByUserId_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("GET", pattern_TeamService_GetTeamsByUserId_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
@@ -845,9 +857,9 @@ var (
 
 	pattern_TeamService_UpsertTeamProject_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3}, []string{"v1", "teams", "id", "project"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_TeamService_GetTeamByTeamId_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v1", "teams", "id"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_TeamService_GetTeamByTeamId_0 = runtime.MustPattern(runtime.NewPattern(1, []int{1, 0, 4, 1, 5, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"api", "teams", "id"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_TeamService_GetTeamsByUserId_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"v1", "teams", "users", "id"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_TeamService_GetTeamsByUserId_0 = runtime.MustPattern(runtime.NewPattern(1, []int{1, 0, 4, 1, 5, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"api", "teams", "users", "id"}, "", runtime.AssumeColonVerbOpt(true)))
 )
 
 var (

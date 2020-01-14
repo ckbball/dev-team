@@ -17,7 +17,7 @@ type repository interface {
   DeleteTeam(context.Context, string) (int64, int64, int64, error)
   //GetTeamByTeamId(context.Context, string) (*v1.Team, error)
   // GetTeamsByUserId(context.Context, string) ([]v1.Team, error)
-  AddMember(context.Context, string, string) (string, error)
+  AddMember(context.Context, *v1.MemberUpsertRequest) (string, error)
   RemoveMember(context.Context, string, string) (int64, error)
   UpsertProject(context.Context, string, *v1.Project) (int64, error)
 }
@@ -47,7 +47,7 @@ func (r *teamRepository) connect(ctx context.Context) (*sql.Conn, error) {
 func (r *teamRepository) CreateTeam(ctx context.Context, team *v1.Team) (string, error) {
   // prepare sql statements for teams, skills, members
   teamStmt := `INSERT INTO teams (leader, team_name, open_roles, size, last_active) VALUES(?, ?, ?, ?, ?)`
-  memberStmt := `INSERT INTO members (member_id, member_name, team_id) VALUES %s`
+  memberStmt := `INSERT INTO members (user_id, member_name, team_id, member_role) VALUES %s`
   skillStmt := `INSERT INTO skills (skill_name, team_id) VALUES %s`
 
   fmt.Fprintf(os.Stderr, "In createteam repo\n")
@@ -80,6 +80,7 @@ func (r *teamRepository) CreateTeam(ctx context.Context, team *v1.Team) (string,
     memberArgs = append(memberArgs, w.Id)
     memberArgs = append(memberArgs, w.Name)
     memberArgs = append(memberArgs, teamId)
+    memberArgs = append(memberArgs, w.Role)
   }
 
   // create member sql statement
@@ -143,26 +144,26 @@ func (r *teamRepository) DeleteTeam(ctx context.Context, id string) (int64, int6
     return -1, -1, -1, err
   }
 
-  // insert team into teams table capturing the id
+  // delete all members of a specific team
   memResult, err := tx.Exec(memberStmt, idAsInt)
   if err != nil {
     tx.Rollback()
     return -1, -1, -1, err
   }
-  // gather the id of the inserted team
+  // gather the number of rows deleted
   memRows, err := memResult.RowsAffected()
   if err != nil {
     tx.Rollback()
     return -1, -1, -1, err
   }
 
-  // insert team into teams table capturing the id
+  // delete skills of a specific team
   skillResult, err := tx.Exec(skillStmt, idAsInt)
   if err != nil {
     tx.Rollback()
     return -1, -1, -1, err
   }
-  // gather the id of the inserted team
+  // gather the number of rows deleted
   skillRows, err := skillResult.RowsAffected()
   if err != nil {
     tx.Rollback()
@@ -196,12 +197,11 @@ func (r *teamRepository) DeleteTeam(ctx context.Context, id string) (int64, int6
 // input: context-the current handler context, id of team to be inserted to, user id of new member
 // output ON SUCCESS: string - member number of new member within team, error - nil
 // output ON FAILURE: string - nil, error - the error object from whatever created the error
-func (r *teamRepository) AddMember(ctx context.Context, teamId string, userId string) (string, error) {
+func (r *teamRepository) AddMember(ctx context.Context, req *v1.MemberUpsertRequest) (string, error) {
   // prepare sql statements for teams, skills, members
   // need to change this to update
-  teamStmt := `INSERT INTO teams (leader, team_name, open_roles, size, last_active) VALUES(?, ?, ?, ?, ?)`
 
-  memberStmt := `INSERT INTO members (member_id, team_id) VALUES (?, ?)`
+  memberStmt := `INSERT INTO members (user_id, team_id, member_email, member_role) VALUES (?, ?, ?, ?)`
 
   // start transaction
   tx, err := r.db.BeginTx(ctx, &sql.TxOptions{})
@@ -210,7 +210,7 @@ func (r *teamRepository) AddMember(ctx context.Context, teamId string, userId st
   }
 
   // insert team into teams table capturing the id
-  memResult, err := tx.Exec(memberStmt, userId, teamId)
+  memResult, err := tx.Exec(memberStmt, req.MemberId, req.Id, req.MemberEmail, req.Role)
   if err != nil {
     tx.Rollback()
     return -1, err
@@ -237,9 +237,8 @@ func (r *teamRepository) AddMember(ctx context.Context, teamId string, userId st
 func (r *teamRepository) RemoveMember(ctx context.Context, teamId string, memberId string) (string, error) {
   // prepare sql statements for teams, skills, members
   // need to change this to update
-  teamStmt := `INSERT INTO teams (leader, team_name, open_roles, size, last_active) VALUES(?, ?, ?, ?, ?)`
 
-  memberStmt := `DELETE FROM members WHERE team_id=? AND member_id=?`
+  memberStmt := `DELETE FROM members WHERE team_id=? AND id=?`
   // start transaction
   tx, err := r.db.BeginTx(ctx, &sql.TxOptions{})
   if err != nil {

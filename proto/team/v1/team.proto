@@ -68,15 +68,13 @@ service TeamService {
 
   rpc GetTeamByTeamId(GetByTeamIdRequest) returns (GetByTeamIdResponse) {
     option (google.api.http) = {
-      post: "/v1/teams/{id}",
-      body: "*"
+      get: "/{api}/teams/{id}"
     };
   }
 
   rpc GetTeamsByUserId(GetByUserIdRequest) returns (GetByUserIdResponse) {
     option (google.api.http) = {
-      post: "/v1/teams/users/{id}",
-      body: "*"
+      get: "/{api}/teams/users/{id}"
     };
   }
 }
@@ -110,7 +108,8 @@ message MemberUpsertRequest {
   string api = 1;
   string id = 2;
   string member_id = 3;
-  string role = 4;
+  string member_email = 4;
+  string role = 5;
 }
 
 message MemberUpsertResponse {
@@ -176,8 +175,9 @@ message Team {
 }
 
 message Member {
-  string name = 1;
+  string email = 1;
   int32 id = 2;
+  string role = 3;
 }
 
 message Project {
@@ -185,6 +185,6 @@ message Project {
   repeated string languages = 2;
   string name = 3;
   string github_link = 4;
-  string complexity = 5;
+  int32 complexity = 5;
   int32 duration = 6;
 }

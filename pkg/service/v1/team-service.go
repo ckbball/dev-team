@@ -114,7 +114,7 @@ func (s *handler) AddMember(ctx context.Context, req *v1.MemberUpsertRequest) (*
   // add in here somewhere maybe in future to get new member's name from their account as an additional
   // field
 
-  _, err := s.repo.AddMember(ctx, req.Id, req.MemberId)
+  _, err := s.repo.AddMember(ctx, req)
   if err != nil {
     fmt.Fprintf(os.Stderr, "error from Repo AddMember: %v\n", req.Id)
     return nil, err
