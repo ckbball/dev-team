@@ -284,14 +284,14 @@ func (r *teamRepository) UpsertProject(ctx context.Context, teamId string, proje
   // insert project into projects table capturing the id
   result, err := tx.Exec(projStmt, project.Description, project.Name, project.GithubLink, teamId, project.Complexity, project.Duration)
   if err != nil {
-    fmt.Fprintf(os.Stderr, "error from Repo UpsertProject: %v\n", req.Id)
+    fmt.Fprintf(os.Stderr, "error in Exec(Project)")
     tx.Rollback()
     return -1, err
   }
   // gather the id of the inserted project
   projectId, err := result.LastInsertId()
   if err != nil {
-    fmt.Fprintf(os.Stderr, "error from Repo UpsertProject: %v\n", req.Id)
+    fmt.Fprintf(os.Stderr, "error in LastInsertId")
     tx.Rollback()
     return -1, err
   }
@@ -313,7 +313,7 @@ func (r *teamRepository) UpsertProject(ctx context.Context, teamId string, proje
   // insert langs into langs table including team_id field
   _, err = tx.Exec(langStmt, langArgs...)
   if err != nil {
-    fmt.Fprintf(os.Stderr, "error from Repo UpsertProject: %v\n", req.Id)
+    fmt.Fprintf(os.Stderr, "error in Exec(Language)")
     tx.Rollback()
     return -1, err
   }
@@ -321,7 +321,7 @@ func (r *teamRepository) UpsertProject(ctx context.Context, teamId string, proje
   // commit transaction
   err = tx.Commit()
   if err != nil {
-    fmt.Fprintf(os.Stderr, "error from Repo UpsertProject: %v\n", req.Id)
+    fmt.Fprintf(os.Stderr, "error in Commit()")
     return -1, err
   }
 
