@@ -74,11 +74,12 @@ func (r *teamRepository) CreateTeam(ctx context.Context, team *v1.Team) (string,
   // create bulk array insert values.
   memberStrings := []string{}
   memberArgs := []interface{}{}
+  // iterate over each member and construct sql arguments
   for _, w := range team.Members {
-    memberStrings = append(memberStrings, "(?, ?, ?)")
+    memberStrings = append(memberStrings, "(?, ?, ?, ?)")
 
     memberArgs = append(memberArgs, w.Id)
-    memberArgs = append(memberArgs, w.Name)
+    memberArgs = append(memberArgs, w.Email)
     memberArgs = append(memberArgs, teamId)
     memberArgs = append(memberArgs, w.Role)
   }
@@ -206,20 +207,20 @@ func (r *teamRepository) AddMember(ctx context.Context, req *v1.MemberUpsertRequ
   // start transaction
   tx, err := r.db.BeginTx(ctx, &sql.TxOptions{})
   if err != nil {
-    return -1, -1, -1, err
+    return "", err
   }
 
   // insert team into teams table capturing the id
   memResult, err := tx.Exec(memberStmt, req.MemberId, req.Id, req.MemberEmail, req.Role)
   if err != nil {
     tx.Rollback()
-    return -1, err
+    return "", err
   }
   // gather the id of the inserted team
-  memRows, err := memResult.RowsAffected()
+  memId, err := memResult.LastInsertId()
   if err != nil {
     tx.Rollback()
-    return -1, err
+    return "", err
   }
 
   // commit transaction
@@ -227,14 +228,14 @@ func (r *teamRepository) AddMember(ctx context.Context, req *v1.MemberUpsertRequ
   if err != nil {
     return -1, err
   }
-  return memRows, nil
+  return strconv.FormatInt(memId, 10), nil
 }
 
 // Removes a member from a team
 // input: context-the current handler context, id of team to be inserted to, user id of new member
 // output ON SUCCESS: string - member number of new member within team, error - nil
 // output ON FAILURE: string - nil, error - the error object from whatever created the error
-func (r *teamRepository) RemoveMember(ctx context.Context, teamId string, memberId string) (string, error) {
+func (r *teamRepository) RemoveMember(ctx context.Context, teamId string, memberId string) (int64, error) {
   // prepare sql statements for teams, skills, members
   // need to change this to update
 
@@ -242,17 +243,17 @@ func (r *teamRepository) RemoveMember(ctx context.Context, teamId string, member
   // start transaction
   tx, err := r.db.BeginTx(ctx, &sql.TxOptions{})
   if err != nil {
-    return -1, -1, -1, err
+    return -1, err
   }
 
-  // insert team into teams table capturing the id
+  // delete member from specified team
   memResult, err := tx.Exec(memberStmt, teamId, memberId)
   if err != nil {
     tx.Rollback()
     return -1, err
   }
-  // gather the id of the inserted team
-  memRows, err := memResult.RowsAffected()
+  // gather the number of rows deleted
+  numRows, err := memResult.RowsAffected()
   if err != nil {
     tx.Rollback()
     return -1, err
@@ -263,7 +264,7 @@ func (r *teamRepository) RemoveMember(ctx context.Context, teamId string, member
   if err != nil {
     return -1, err
   }
-  return memRows, nil
+  return numRows, nil
 }
 
 func (r *teamRepository) UpsertProject(ctx context.Context, teamId string, project *v1.Project) (int64, error) {

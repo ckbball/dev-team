@@ -114,7 +114,7 @@ func (s *handler) AddMember(ctx context.Context, req *v1.MemberUpsertRequest) (*
   // add in here somewhere maybe in future to get new member's name from their account as an additional
   // field
 
-  _, err := s.repo.AddMember(ctx, req)
+  newId, err := s.repo.AddMember(ctx, req)
   if err != nil {
     fmt.Fprintf(os.Stderr, "error from Repo AddMember: %v\n", req.Id)
     return nil, err
@@ -126,7 +126,7 @@ func (s *handler) AddMember(ctx context.Context, req *v1.MemberUpsertRequest) (*
   return &v1.MemberUpsertResponse{
     Api:          "v1",
     Status:       "Deleted",
-    MemberNumber: 1,
+    MemberNumber: newId,
   }, nil
 }
 
@@ -148,7 +148,7 @@ func (s *handler) RemoveMember(ctx context.Context, req *v1.MemberDeleteRequest)
 
   return &v1.MemberDeleteResponse{
     Api:    "v1",
-    Status: "Test",
+    Status: "Member Deleted",
     Count:  count,
   }, nil
 }
