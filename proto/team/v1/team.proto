@@ -61,7 +61,7 @@ service TeamService {
 
   rpc UpsertTeamProject(ProjectUpsertRequest) returns (ProjectUpsertResponse) {
     option (google.api.http) = {
-      post: "/v1/teams/project/{id}",
+      post: "/v1/teams/{id}/project",
       body: "*"
     };
   }

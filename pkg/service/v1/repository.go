@@ -19,7 +19,7 @@ type repository interface {
   // GetTeamsByUserId(context.Context, string) ([]v1.Team, error)
   AddMember(context.Context, string, string) (string, error)
   RemoveMember(context.Context, string, string) (int64, error)
-  //UpsertProject(context.Context, string, *v1.Project) (int64, error)
+  UpsertProject(context.Context, string, *v1.Project) (int64, error)
 }
 
 type teamRepository struct {

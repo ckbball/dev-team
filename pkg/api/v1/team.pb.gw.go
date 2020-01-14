@@ -843,7 +843,7 @@ var (
 
 	pattern_TeamService_RemoveMember_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"v1", "teams", "id", "members", "member_number"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_TeamService_UpsertTeamProject_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"v1", "teams", "project", "id"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_TeamService_UpsertTeamProject_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3}, []string{"v1", "teams", "id", "project"}, "", runtime.AssumeColonVerbOpt(true)))
 
 	pattern_TeamService_GetTeamByTeamId_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v1", "teams", "id"}, "", runtime.AssumeColonVerbOpt(true)))
 

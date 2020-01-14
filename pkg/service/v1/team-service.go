@@ -158,6 +158,19 @@ func (s *handler) UpsertTeamProject(ctx context.Context, req *v1.ProjectUpsertRe
   if err := s.checkAPI(req.Api); err != nil {
     return nil, err
   }
+
+  // add in here somewhere maybe in future to get new member's name from their account as an additional
+  // field
+
+  _, err := s.repo.AddMember(ctx, req.Id, req.MemberId)
+  if err != nil {
+    fmt.Fprintf(os.Stderr, "error from Repo AddMember: %v\n", req.Id)
+    return nil, err
+  }
+  fmt.Fprintf(os.Stderr, "Does repo work?\n")
+
+  // publish team_created Event here
+
   return &v1.ProjectUpsertResponse{
     Api:    "v1",
     Status: "Test",

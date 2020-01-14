@@ -53,45 +53,6 @@
         ]
       }
     },
-    "/v1/teams/project/{id}": {
-      "post": {
-        "operationId": "UpsertTeamProject",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/teamProjectUpsertResponse"
-            }
-          },
-          "404": {
-            "description": "Returned when resource doesn't exist",
-            "schema": {
-              "type": "string",
-              "format": "string"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/teamProjectUpsertRequest"
-            }
-          }
-        ],
-        "tags": [
-          "TeamService"
-        ]
-      }
-    },
     "/v1/teams/users/{id}": {
       "post": {
         "operationId": "GetTeamsByUserId",
@@ -280,6 +241,45 @@
             "in": "query",
             "required": false,
             "type": "string"
+          }
+        ],
+        "tags": [
+          "TeamService"
+        ]
+      }
+    },
+    "/v1/teams/{id}/project": {
+      "post": {
+        "operationId": "UpsertTeamProject",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/teamProjectUpsertResponse"
+            }
+          },
+          "404": {
+            "description": "Returned when resource doesn't exist",
+            "schema": {
+              "type": "string",
+              "format": "string"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/teamProjectUpsertRequest"
+            }
           }
         ],
         "tags": [
