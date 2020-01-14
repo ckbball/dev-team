@@ -137,7 +137,7 @@ func (s *handler) RemoveMember(ctx context.Context, req *v1.MemberDeleteRequest)
     return nil, err
   }
 
-  count, err := s.repo.RemoveMember(ctx, req.Id, req.MemberId)
+  count, err := s.repo.RemoveMember(ctx, req.Id, req.MemberNumber)
   if err != nil {
     fmt.Fprintf(os.Stderr, "error from Repo RemoveMember: %v\n", req.Id)
     return nil, err

@@ -326,5 +326,5 @@ func (r *teamRepository) UpsertProject(ctx context.Context, teamId string, proje
   }
 
   // return id of newly inserted team and no error
-  return strconv.FormatInt(projectId, 10), nil
+  return projectId, nil
 }

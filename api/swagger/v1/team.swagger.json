@@ -346,7 +346,8 @@
           "type": "string"
         },
         "count": {
-          "type": "string"
+          "type": "string",
+          "format": "int64"
         }
       }
     },

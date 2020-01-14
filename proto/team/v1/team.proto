@@ -127,7 +127,7 @@ message MemberDeleteRequest {
 message MemberDeleteResponse {
   string api = 1;
   string status = 2;
-  string count = 3;
+  int64 count = 3;
 }
 
 message ProjectUpsertRequest {
