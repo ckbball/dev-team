@@ -268,5 +268,58 @@ func (r *teamRepository) RemoveMember(ctx context.Context, teamId string, member
 }
 
 func (r *teamRepository) UpsertProject(ctx context.Context, teamId string, project *v1.Project) (int64, error) {
+  // prepare sql statements
+  projStmt := `INSERT INTO projects (goal, project_name, github_link, team_id, complexity, duration) VALUES(?, ?, ?, ?, ?, ?)`
+  langStmt := `INSERT INTO languages (lang_name, project_id) VALUES %s`
 
+  fmt.Fprintf(os.Stderr, "In createteam repo\n")
+
+  // start transaction
+  tx, err := r.db.BeginTx(ctx, &sql.TxOptions{})
+  if err != nil {
+    return "transaction begin", err
+  }
+
+  // insert project into projects table capturing the id
+  result, err := tx.Exec(projStmt, project.Description, project.Name, project.GithubLink, teamId, project.Complexity, project.Duration)
+  if err != nil {
+    tx.Rollback()
+    return "Exec project stmt", err
+  }
+  // gather the id of the inserted project
+  projectId, err := result.LastInsertId()
+  if err != nil {
+    tx.Rollback()
+    return "project insertId()", err
+  }
+
+  // create bulk array insert values.
+  langStrings := []string{}
+  langArgs := []interface{}{}
+  for _, w := range team.langs {
+    langStrings = append(langStrings, "(?, ?)")
+
+    langArgs = append(langArgs, w)
+    langArgs = append(langArgs, projectId)
+  }
+
+  // create lang sql statement
+  langStmt = fmt.Sprintf(langStmt, strings.Join(langStrings, ","))
+  fmt.Fprintf(os.Stderr, "langStmt: %v\n", langStmt)
+
+  // insert langs into langs table including team_id field
+  _, err = tx.Exec(langStmt, langArgs...)
+  if err != nil {
+    tx.Rollback()
+    return "Exec lang stmt", err
+  }
+
+  // commit transaction
+  err = tx.Commit()
+  if err != nil {
+    return "Commit()", err
+  }
+
+  // return id of newly inserted team and no error
+  return strconv.FormatInt(projectId, 10), nil
 }

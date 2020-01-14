@@ -419,6 +419,13 @@
         },
         "github_link": {
           "type": "string"
+        },
+        "complexity": {
+          "type": "string"
+        },
+        "duration": {
+          "type": "integer",
+          "format": "int32"
         }
       }
     },

@@ -185,4 +185,6 @@ message Project {
   repeated string languages = 2;
   string name = 3;
   string github_link = 4;
+  string complexity = 5;
+  int32 duration = 6;
 }
