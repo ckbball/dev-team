@@ -422,6 +422,18 @@ func (r *teamRepository) GetTeamByTeamId(ctx context.Context, id string) (*v1.Te
   // add retrieved members to team
   team.Members = members
 
+  // execute skills statement query
+
+  //scan skills
+
+  // execute project statement query
+
+  // scan project
+
+  // execute languages statement query
+
+  // scan languages
+
   // commit transaction
   err = tx.Commit()
   if err != nil {
