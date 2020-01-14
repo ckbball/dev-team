@@ -15,7 +15,7 @@ import (
 type repository interface {
   CreateTeam(context.Context, *v1.Team) (string, error)
   DeleteTeam(context.Context, string) (int64, int64, int64, error)
-  GetTeamByTeamId(context.Context, string) (*v1.Team, error)
+  GetTeamByTeamId(context.Context, string) (*v1.Team, *v1.Project, error)
   // GetTeamsByUserId(context.Context, string) ([]v1.Team, error)
   AddMember(context.Context, *v1.MemberUpsertRequest) (string, error)
   RemoveMember(context.Context, string, string) (int64, error)
@@ -359,7 +359,7 @@ func (r *teamRepository) UpsertProject(ctx context.Context, teamId string, proje
   return projectId, nil
 }
 
-func (r *teamRepository) GetTeamByTeamId(ctx context.Context, id string) (*v1.Team, error) {
+func (r *teamRepository) GetTeamByTeamId(ctx context.Context, id string) (*v1.Team, *v1.Project, error) {
   // prepare sql statements for team, member, skills, project, languages
   teamStmt := `SELECT leader, team_name, open_roles, size, last_active FROM teams WHERE id=?`
   memberStmt := `SELECT user_id, member_email, member_role FROM members WHERE team_id=?`
@@ -370,7 +370,7 @@ func (r *teamRepository) GetTeamByTeamId(ctx context.Context, id string) (*v1.Te
   team := &v1.Team{}
   members := []*v1.Member{}
   skills := []string{}
-  projects := []*v1.Project{}
+  project := &v1.Project{}
   languages := []string{}
 
   // start transaction
@@ -423,16 +423,73 @@ func (r *teamRepository) GetTeamByTeamId(ctx context.Context, id string) (*v1.Te
   team.Members = members
 
   // execute skills statement query
+  skillRows, err := tx.Query(skillStmt, id)
+  if err != nil {
+    fmt.Fprintf(os.Stderr, "error in skill Query")
+    return nil, err
+  }
 
   //scan skills
+  defer skillRows.Close()
+
+  // scan each member row into skills variable
+  for skillRows.Next() {
+    s := ""
+
+    err = skillRows.Scan(&s)
+    if err != nil {
+      return nil, err
+    }
+    skills = append(skills, s)
+  }
+
+  if err = skillRows.Err(); err != nil {
+    return nil, err
+  }
+
+  // add retrieved skills to team
+  team.Skills = skills
 
   // execute project statement query
-
+  projectRow, err := tx.QueryRow(projStmt, id)
+  if err != nil {
+    fmt.Fprintf(os.Stderr, "error in project Query")
+    return nil, err
+  }
   // scan project
+  err = projectRow.Scan(&project.Description, &project.Name, &project.GithubLink, &project.Complexity, &project.Duration)
+  if err == sql.ErrNoRows {
+    return nil, errors.New("project Query: no matching record found")
+  } else if err != nil {
+    return nil, err
+  }
 
   // execute languages statement query
-
+  languagesRows, err := tx.Query(langStmt, id)
+  if err != nil {
+    fmt.Fprintf(os.Stderr, "error in languages Query")
+    return nil, err
+  }
   // scan languages
+  defer languagesRows.Close()
+
+  // scan each languages row into languages variable
+  for languagesRows.Next() {
+    s := ""
+
+    err = languagesRows.Scan(&s)
+    if err != nil {
+      return nil, err
+    }
+    languages = append(languages, s)
+  }
+
+  if err = languagesRows.Err(); err != nil {
+    return nil, err
+  }
+
+  // add retrieved languagess to team
+  project.Languages = languages
 
   // commit transaction
   err = tx.Commit()
@@ -442,5 +499,5 @@ func (r *teamRepository) GetTeamByTeamId(ctx context.Context, id string) (*v1.Te
   }
 
   // return id of newly inserted team and no error
-  return team, nil
+  return team, project, nil
 }

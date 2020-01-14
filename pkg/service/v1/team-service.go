@@ -183,18 +183,19 @@ func (s *handler) GetTeamByTeamId(ctx context.Context, req *v1.GetByTeamIdReques
     return nil, err
   }
 
-  team, err := s.repo.GetTeamByTeamId(ctx, req.Id)
+  team, project, err := s.repo.GetTeamByTeamId(ctx, req.Id)
   if err != nil {
-    fmt.Fprintf(os.Stderr, "error from Repo UpsertProject: %v\n", req.Id)
+    fmt.Fprintf(os.Stderr, "error from Repo GetByTeamId: %v\n", req.Id)
     return nil, err
   }
   fmt.Fprintf(os.Stderr, "Does repo work?\n")
 
   return &v1.GetByTeamIdResponse{
-    Api:    "v1",
-    Status: "Team Retrieved",
-    Team:   team,
-    Id:     team.Id,
+    Api:     "v1",
+    Status:  "Team Retrieved",
+    Team:    team,
+    Id:      team.Id,
+    Project: project,
   }, nil
 }
 
