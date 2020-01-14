@@ -18,7 +18,7 @@ type repository interface {
   //GetTeamByTeamId(context.Context, string) (*v1.Team, error)
   // GetTeamsByUserId(context.Context, string) ([]v1.Team, error)
   AddMember(context.Context, string, string) (string, error)
-  //RemoveMember(context.Context, string, string) (int64, error)
+  RemoveMember(context.Context, string, string) (int64, error)
   //UpsertProject(context.Context, string, *v1.Project) (int64, error)
 }
 
@@ -201,7 +201,7 @@ func (r *teamRepository) AddMember(ctx context.Context, teamId string, userId st
   // need to change this to update
   teamStmt := `INSERT INTO teams (leader, team_name, open_roles, size, last_active) VALUES(?, ?, ?, ?, ?)`
 
-  memberStmt := `INSERT INTO members (member_id, team_id) VALUES (?, ?, ?)`
+  memberStmt := `INSERT INTO members (member_id, team_id) VALUES (?, ?)`
 
   // start transaction
   tx, err := r.db.BeginTx(ctx, &sql.TxOptions{})
@@ -211,6 +211,43 @@ func (r *teamRepository) AddMember(ctx context.Context, teamId string, userId st
 
   // insert team into teams table capturing the id
   memResult, err := tx.Exec(memberStmt, userId, teamId)
+  if err != nil {
+    tx.Rollback()
+    return -1, err
+  }
+  // gather the id of the inserted team
+  memRows, err := memResult.RowsAffected()
+  if err != nil {
+    tx.Rollback()
+    return -1, err
+  }
+
+  // commit transaction
+  err = tx.Commit()
+  if err != nil {
+    return -1, err
+  }
+  return memRows, nil
+}
+
+// Removes a member from a team
+// input: context-the current handler context, id of team to be inserted to, user id of new member
+// output ON SUCCESS: string - member number of new member within team, error - nil
+// output ON FAILURE: string - nil, error - the error object from whatever created the error
+func (r *teamRepository) RemoveMember(ctx context.Context, teamId string, memberId string) (string, error) {
+  // prepare sql statements for teams, skills, members
+  // need to change this to update
+  teamStmt := `INSERT INTO teams (leader, team_name, open_roles, size, last_active) VALUES(?, ?, ?, ?, ?)`
+
+  memberStmt := `DELETE FROM members WHERE team_id=? AND member_id=?`
+  // start transaction
+  tx, err := r.db.BeginTx(ctx, &sql.TxOptions{})
+  if err != nil {
+    return -1, -1, -1, err
+  }
+
+  // insert team into teams table capturing the id
+  memResult, err := tx.Exec(memberStmt, teamId, memberId)
   if err != nil {
     tx.Rollback()
     return -1, err

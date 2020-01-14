@@ -129,16 +129,30 @@ func (s *handler) AddMember(ctx context.Context, req *v1.MemberUpsertRequest) (*
     MemberNumber: 1,
   }, nil
 }
+
+// untested
 func (s *handler) RemoveMember(ctx context.Context, req *v1.MemberDeleteRequest) (*v1.MemberDeleteResponse, error) {
   // check api version
   if err := s.checkAPI(req.Api); err != nil {
     return nil, err
   }
+
+  count, err := s.repo.RemoveMember(ctx, req.Id, req.MemberId)
+  if err != nil {
+    fmt.Fprintf(os.Stderr, "error from Repo RemoveMember: %v\n", req.Id)
+    return nil, err
+  }
+  fmt.Fprintf(os.Stderr, "Does repo work?\n")
+
+  // publish team_created Event here
+
   return &v1.MemberDeleteResponse{
     Api:    "v1",
     Status: "Test",
+    Count:  count,
   }, nil
 }
+
 func (s *handler) UpsertTeamProject(ctx context.Context, req *v1.ProjectUpsertRequest) (*v1.ProjectUpsertResponse, error) {
   // check api version
   if err := s.checkAPI(req.Api); err != nil {
