@@ -558,13 +558,16 @@ func (r *teamRepository) GetTeams(ctx context.Context, page int64, limit int64) 
   // return teams
   item_id := 0
   if page > 1 {
-    item_id = limit * int((page - 1))
+    item_id = limit * (page - 1)
   }
 
   teams := []*v1.Team{}
 
   for i := item_id; i < item_id+limit; i++ {
-    team := r.GetTeamByTeamId(ctx, i)
+    team, err := r.GetTeamByTeamId(ctx, strconv.Itoa(int(i)))
+    if err != nil {
+      return teams, nil
+    }
 
     teams = append(teams, team)
   }
