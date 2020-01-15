@@ -182,6 +182,8 @@ func main() {
   }
   log.Printf("GetTeamsByUserId response: Code=%d, Body=%s\n\n", resp.StatusCode, body)
 
+  // When implemented call getAllTeams()
+
   // Call DeleteTeam
   req, err = http.NewRequest("DELETE", fmt.Sprintf("%s%s/%s", *address, "/v1/teams", createdTeamId), nil)
   resp, err = http.DefaultClient.Do(req)

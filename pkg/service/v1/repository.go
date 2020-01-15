@@ -20,6 +20,7 @@ type repository interface {
   AddMember(context.Context, *v1.MemberUpsertRequest) (string, error)
   RemoveMember(context.Context, string, string) (int64, error)
   UpsertProject(context.Context, string, *v1.Project) (int64, error)
+  GetTeams(context.Context, int64, int64) ([]*v1.Team, error)
 }
 
 type teamRepository struct {
@@ -549,4 +550,10 @@ func (r *teamRepository) GetTeamsByUserId(ctx context.Context, id string) ([]*v1
 
   // return list of teams that user is in
   return teams, nil
+}
+
+func (r *teamRepository) GetTeams(ctx context.Context, page int64, limit int64) ([]*v1.Team, error) {
+  // calculate page id
+  // range over id's from page_id to page_id + limit calling GetTeamByTeamId and appending to teams var
+  // return teams
 }

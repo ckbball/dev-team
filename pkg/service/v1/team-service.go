@@ -228,3 +228,30 @@ func (s *handler) GetTeamsByUserId(ctx context.Context, req *v1.GetByUserIdReque
     Id:     req.Id,
   }, nil
 }
+
+func (s *handler) GetTeams(ctx context.Context, req *v1.GetTeamsRequest) (*v1.GetTeamsResponse, error) {
+  // check api version
+  if err := s.checkAPI(req.Api); err != nil {
+    return nil, err
+  }
+
+  teams, err := s.repo.GetTeams(ctx, req.Page, req.Limit)
+  if err != nil {
+    fmt.Fprintf(os.Stderr, "error from Repo GetByUserId: %v\n", req.Id)
+    return nil, err
+  }
+
+  if len(teams) == 0 {
+    return &v1.GetTeamsResponse{
+      Api:    "v1",
+      Status: "No teams found",
+      Teams:  teams,
+    }, nil
+  }
+
+  return &v1.GetTeamsResponse{
+    Api:    "v1",
+    Status: "Teams retrieived",
+    Teams:  teams,
+  }, nil
+}

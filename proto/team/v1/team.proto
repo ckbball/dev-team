@@ -77,6 +77,12 @@ service TeamService {
       get: "/{api}/teams/users/{id}"
     };
   }
+
+  rpc GetTeams(GetTeamsRequest) returns (GetTeamsResponse) {
+    option (google.api.http) = {
+      get: "/{api}/teams"
+    };
+  }
 }
 
 message TeamUpsertRequest {
@@ -162,6 +168,18 @@ message GetByUserIdResponse {
   string id = 2;
   repeated Team teams = 3;
   string status = 4;
+}
+
+message GetTeamsRequest {
+  string api = 1;
+  int64 page = 2;
+  int64 limit = 3;
+}
+
+message GetTeamsResponse {
+  string api = 1;
+  repeated Team teams = 2;
+  string status = 3;
 }
 
 message Team {
