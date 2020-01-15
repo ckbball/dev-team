@@ -377,7 +377,7 @@ func (r *teamRepository) GetTeamByTeamId(ctx context.Context, id string) (*v1.Te
   tx, err := r.db.BeginTx(ctx, &sql.TxOptions{})
   if err != nil {
     fmt.Fprintf(os.Stderr, "error in BeginTx")
-    return nil, nil, err
+    return nil, err
   }
 
   // execute team sql statement
@@ -386,16 +386,16 @@ func (r *teamRepository) GetTeamByTeamId(ctx context.Context, id string) (*v1.Te
   // scan fields into team
   err = row.Scan(&team.Leader, &team.Name, &team.OpenRoles, &team.Size, &team.LastActive, &team.Id)
   if err == sql.ErrNoRows {
-    return nil, nil, errors.New("team Query: no matching record found")
+    return nil, errors.New("team Query: no matching record found")
   } else if err != nil {
-    return nil, nil, err
+    return nil, err
   }
 
   // execute member statement
   memberRows, err := tx.Query(memberStmt, id)
   if err != nil {
     fmt.Fprintf(os.Stderr, "error in members Query")
-    return nil, nil, err
+    return nil, err
   }
 
   defer memberRows.Close()
@@ -406,13 +406,13 @@ func (r *teamRepository) GetTeamByTeamId(ctx context.Context, id string) (*v1.Te
 
     err = memberRows.Scan(&s.Id, &s.Email, &s.Role)
     if err != nil {
-      return nil, nil, err
+      return nil, err
     }
     members = append(members, s)
   }
 
   if err = memberRows.Err(); err != nil {
-    return nil, nil, err
+    return nil, err
   }
 
   // add retrieved members to team
@@ -422,7 +422,7 @@ func (r *teamRepository) GetTeamByTeamId(ctx context.Context, id string) (*v1.Te
   skillRows, err := tx.Query(skillStmt, id)
   if err != nil {
     fmt.Fprintf(os.Stderr, "error in skill Query")
-    return nil, nil, err
+    return nil, err
   }
 
   //scan skills
@@ -434,13 +434,13 @@ func (r *teamRepository) GetTeamByTeamId(ctx context.Context, id string) (*v1.Te
 
     err = skillRows.Scan(&s)
     if err != nil {
-      return nil, nil, err
+      return nil, err
     }
     skills = append(skills, s)
   }
 
   if err = skillRows.Err(); err != nil {
-    return nil, nil, err
+    return nil, err
   }
 
   // add retrieved skills to team
@@ -455,14 +455,14 @@ func (r *teamRepository) GetTeamByTeamId(ctx context.Context, id string) (*v1.Te
     // for development this is fine
     fmt.Fprintf(os.Stderr, "team has no project")
   } else if err != nil {
-    return nil, nil, err
+    return nil, err
   }
 
   // execute languages statement query
   languagesRows, err := tx.Query(langStmt, id)
   if err != nil {
     fmt.Fprintf(os.Stderr, "error in languages Query")
-    return nil, nil, err
+    return nil, err
   }
   // scan languages
   defer languagesRows.Close()
@@ -473,13 +473,13 @@ func (r *teamRepository) GetTeamByTeamId(ctx context.Context, id string) (*v1.Te
 
     err = languagesRows.Scan(&s)
     if err != nil {
-      return nil, nil, err
+      return nil, err
     }
     languages = append(languages, s)
   }
 
   if err = languagesRows.Err(); err != nil {
-    return nil, nil, err
+    return nil, err
   }
 
   // add retrieved languagess to team
@@ -489,7 +489,7 @@ func (r *teamRepository) GetTeamByTeamId(ctx context.Context, id string) (*v1.Te
   err = tx.Commit()
   if err != nil {
     fmt.Fprintf(os.Stderr, "error in Commit()")
-    return nil, nil, err
+    return nil, err
   }
 
   team.Project = project
@@ -500,17 +500,11 @@ func (r *teamRepository) GetTeamByTeamId(ctx context.Context, id string) (*v1.Te
 
 func (r *teamRepository) GetTeamsByUserId(ctx context.Context, id string) ([]*v1.Team, error) {
   // prepare sql statements for team, member, skills, project, languages
-  teamStmt := `SELECT leader, team_name, open_roles, size, last_active, id FROM teams WHERE id=?`
   memberStmt := `SELECT team_id FROM members WHERE user_id=?`
-  skillStmt := `SELECT skill_name FROM skills WHERE team_id=?`
-  projStmt := `SELECT goal, project_name, github_link, complexity, duration FROM projects WHERE team_id=?`
-  langStmt := `SELECT lang_name FROM languages WHERE team_id=?`
 
+  // prepare necessary variables
   teams := []*v1.Team{}
   members := []*v1.Member{}
-  skills := []string{}
-  project := &v1.Project{}
-  languages := []string{}
 
   // select all member rows where user_id = id
   // for each row, call GetTeamByTeamId append response to teams var

@@ -150,7 +150,6 @@ message GetByTeamIdResponse {
   string id = 2;
   Team team = 3;
   string status = 4;
-  Project project = 5;
 }
 
 message GetByUserIdRequest {
@@ -161,7 +160,7 @@ message GetByUserIdRequest {
 message GetByUserIdResponse {
   string api = 1;
   string id = 2;
-  Team team = 3;
+  repeated Team teams = 3;
   string status = 4;
 }
 

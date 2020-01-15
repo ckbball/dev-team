@@ -183,7 +183,7 @@ func (s *handler) GetTeamByTeamId(ctx context.Context, req *v1.GetByTeamIdReques
     return nil, err
   }
 
-  team, project, err := s.repo.GetTeamByTeamId(ctx, req.Id)
+  team, err := s.repo.GetTeamByTeamId(ctx, req.Id)
   if err != nil {
     fmt.Fprintf(os.Stderr, "error from Repo GetByTeamId: %v\n", req.Id)
     return nil, err
@@ -203,8 +203,17 @@ func (s *handler) GetTeamsByUserId(ctx context.Context, req *v1.GetByUserIdReque
   if err := s.checkAPI(req.Api); err != nil {
     return nil, err
   }
+
+  teams, err := s.repo.GetTeamByTeamId(ctx, req.Id)
+  if err != nil {
+    fmt.Fprintf(os.Stderr, "error from Repo GetByUserId: %v\n", req.Id)
+    return nil, err
+  }
+
   return &v1.GetByUserIdResponse{
     Api:    "v1",
-    Status: "Test",
+    Status: "Teams retrieived",
+    Teams:  teams,
+    Id:     req.Id,
   }, nil
 }
