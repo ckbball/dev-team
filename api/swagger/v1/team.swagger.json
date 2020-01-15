@@ -476,6 +476,9 @@
         },
         "id": {
           "type": "string"
+        },
+        "project": {
+          "$ref": "#/definitions/teamProject"
         }
       }
     },
