@@ -301,9 +301,6 @@
         },
         "status": {
           "type": "string"
-        },
-        "project": {
-          "$ref": "#/definitions/teamProject"
         }
       }
     },
@@ -316,8 +313,11 @@
         "id": {
           "type": "string"
         },
-        "team": {
-          "$ref": "#/definitions/teamTeam"
+        "teams": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/teamTeam"
+          }
         },
         "status": {
           "type": "string"
