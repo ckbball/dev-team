@@ -3,7 +3,7 @@ package v1
 import (
   "context"
   "database/sql"
-  //"errors"
+  "errors"
   "fmt"
   "os"
   "strconv"
@@ -361,7 +361,7 @@ func (r *teamRepository) UpsertProject(ctx context.Context, teamId string, proje
 
 func (r *teamRepository) GetTeamByTeamId(ctx context.Context, id string) (*v1.Team, *v1.Project, error) {
   // prepare sql statements for team, member, skills, project, languages
-  teamStmt := `SELECT leader, team_name, open_roles, size, last_active FROM teams WHERE id=?`
+  teamStmt := `SELECT leader, team_name, open_roles, size, last_active, id FROM teams WHERE id=?`
   memberStmt := `SELECT user_id, member_email, member_role FROM members WHERE team_id=?`
   skillStmt := `SELECT skill_name FROM skills WHERE team_id=?`
   projStmt := `SELECT goal, project_name, github_link, complexity, duration FROM projects WHERE team_id=?`
@@ -377,29 +377,25 @@ func (r *teamRepository) GetTeamByTeamId(ctx context.Context, id string) (*v1.Te
   tx, err := r.db.BeginTx(ctx, &sql.TxOptions{})
   if err != nil {
     fmt.Fprintf(os.Stderr, "error in BeginTx")
-    return nil, err
+    return nil, nil, err
   }
 
   // execute team sql statement
-  row, err := tx.QueryRow(teamStmt, id)
-  if err != nil {
-    fmt.Fprintf(os.Stderr, "error in team Query")
-    return nil, err
-  }
+  row := tx.QueryRow(teamStmt, id)
 
   // scan fields into team
-  err = row.Scan(&team.Leader, &team.Name, &team.OpenRoles, &team.Size, &team.LastActive)
+  err = row.Scan(&team.Leader, &team.Name, &team.OpenRoles, &team.Size, &team.LastActive, &team.Id)
   if err == sql.ErrNoRows {
-    return nil, errors.New("team Query: no matching record found")
+    return nil, nil, errors.New("team Query: no matching record found")
   } else if err != nil {
-    return nil, err
+    return nil, nil, err
   }
 
   // execute member statement
   memberRows, err := tx.Query(memberStmt, id)
   if err != nil {
     fmt.Fprintf(os.Stderr, "error in members Query")
-    return nil, err
+    return nil, nil, err
   }
 
   defer memberRows.Close()
@@ -410,13 +406,13 @@ func (r *teamRepository) GetTeamByTeamId(ctx context.Context, id string) (*v1.Te
 
     err = memberRows.Scan(&s.Id, &s.Email, &s.Role)
     if err != nil {
-      return nil, err
+      return nil, nil, err
     }
     members = append(members, s)
   }
 
   if err = memberRows.Err(); err != nil {
-    return nil, err
+    return nil, nil, err
   }
 
   // add retrieved members to team
@@ -426,7 +422,7 @@ func (r *teamRepository) GetTeamByTeamId(ctx context.Context, id string) (*v1.Te
   skillRows, err := tx.Query(skillStmt, id)
   if err != nil {
     fmt.Fprintf(os.Stderr, "error in skill Query")
-    return nil, err
+    return nil, nil, err
   }
 
   //scan skills
@@ -438,37 +434,35 @@ func (r *teamRepository) GetTeamByTeamId(ctx context.Context, id string) (*v1.Te
 
     err = skillRows.Scan(&s)
     if err != nil {
-      return nil, err
+      return nil, nil, err
     }
     skills = append(skills, s)
   }
 
   if err = skillRows.Err(); err != nil {
-    return nil, err
+    return nil, nil, err
   }
 
   // add retrieved skills to team
   team.Skills = skills
 
   // execute project statement query
-  projectRow, err := tx.QueryRow(projStmt, id)
-  if err != nil {
-    fmt.Fprintf(os.Stderr, "error in project Query")
-    return nil, err
-  }
+  projectRow := tx.QueryRow(projStmt, id)
+
   // scan project
   err = projectRow.Scan(&project.Description, &project.Name, &project.GithubLink, &project.Complexity, &project.Duration)
   if err == sql.ErrNoRows {
-    return nil, errors.New("project Query: no matching record found")
+    // for development this is fine
+    fmt.Fprintf(os.Stderr, "team has no project")
   } else if err != nil {
-    return nil, err
+    return nil, nil, err
   }
 
   // execute languages statement query
   languagesRows, err := tx.Query(langStmt, id)
   if err != nil {
     fmt.Fprintf(os.Stderr, "error in languages Query")
-    return nil, err
+    return nil, nil, err
   }
   // scan languages
   defer languagesRows.Close()
@@ -479,13 +473,13 @@ func (r *teamRepository) GetTeamByTeamId(ctx context.Context, id string) (*v1.Te
 
     err = languagesRows.Scan(&s)
     if err != nil {
-      return nil, err
+      return nil, nil, err
     }
     languages = append(languages, s)
   }
 
   if err = languagesRows.Err(); err != nil {
-    return nil, err
+    return nil, nil, err
   }
 
   // add retrieved languagess to team
@@ -495,7 +489,7 @@ func (r *teamRepository) GetTeamByTeamId(ctx context.Context, id string) (*v1.Te
   err = tx.Commit()
   if err != nil {
     fmt.Fprintf(os.Stderr, "error in Commit()")
-    return nil, err
+    return nil, nil, err
   }
 
   // return id of newly inserted team and no error

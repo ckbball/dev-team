@@ -301,6 +301,9 @@
         },
         "status": {
           "type": "string"
+        },
+        "project": {
+          "$ref": "#/definitions/teamProject"
         }
       }
     },
@@ -470,6 +473,9 @@
         "last_active": {
           "type": "integer",
           "format": "int32"
+        },
+        "id": {
+          "type": "string"
         }
       }
     },

@@ -173,6 +173,7 @@ message Team {
   repeated string skills = 5;
   int32 size = 6;
   int32 last_active = 7;
+  string id = 8;
 }
 
 message Member {
