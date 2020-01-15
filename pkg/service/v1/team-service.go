@@ -212,7 +212,7 @@ func (s *handler) GetTeamsByUserId(ctx context.Context, req *v1.GetByUserIdReque
 
   fmt.Fprintf(os.Stderr, "checking teams on request where user has no teams: %v\n", teams)
 
-  if teams == nil {
+  if len(teams) == 0 {
     return &v1.GetByUserIdResponse{
       Api:    "v1",
       Status: "User has no teams",

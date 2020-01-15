@@ -168,7 +168,7 @@ func main() {
   log.Printf("RemoveMember response: Code=%d, Body=%s\n\n", resp.StatusCode, body)
 
   // Call GetTeamsByUserId
-  req, err = http.NewRequest("GET", fmt.Sprintf("%s%s", *address, "/v1/teams/users/11"), nil)
+  req, err = http.NewRequest("GET", fmt.Sprintf("%s%s", *address, "/v1/teams/users/2"), nil)
   resp, err = http.DefaultClient.Do(req)
   if err != nil {
     log.Fatalf("failed to call GetTeamsByUserId method: %v", err)
