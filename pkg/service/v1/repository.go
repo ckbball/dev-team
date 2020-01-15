@@ -8,6 +8,7 @@ import (
   "os"
   "strconv"
   "strings"
+  "time"
 
   v1 "github.com/ckbball/dev-team/pkg/api/v1"
 )
@@ -556,21 +557,55 @@ func (r *teamRepository) GetTeams(ctx context.Context, page int64, limit int64) 
   // calculate page id
   // range over id's from page_id to page_id + limit calling GetTeamByTeamId and appending to teams var
   // return teams
-  item_id := 0
+  var item_id int64
+  item_id = 0
   if page > 1 {
     item_id = limit * (page - 1)
   }
 
+  time_diff := time.Now().Unix() - 2592000
+
+  teamStmt := `SELECT id FROM teams WHERE id > ? AND last_active > ? ORDER BY id ASC LIMIT ?`
+
   teams := []*v1.Team{}
+  teamsOut := []*v1.Team{}
 
-  for i := item_id; i < item_id+limit; i++ {
-    team, err := r.GetTeamByTeamId(ctx, strconv.Itoa(int(i)))
-    if err != nil {
-      return teams, nil
-    }
-
-    teams = append(teams, team)
+  teamRows, err := r.db.Query(teamStmt, item_id, time_diff, limit)
+  if err != nil {
+    fmt.Fprintf(os.Stderr, "error in teams Query")
+    return nil, err
   }
 
-  return teams, nil
+  defer teamRows.Close()
+
+  // scan each team row into teams variable
+  for teamRows.Next() {
+    s := &v1.Team{}
+
+    // scan teams.team_id into team's Id field
+    err = teamRows.Scan(&s.Id)
+    if err != nil {
+      return nil, err
+    }
+    teams = append(teams, s)
+  }
+
+  if err = teamRows.Err(); err != nil {
+    return nil, err
+  }
+
+  // range over list of ids calling GetTeamByTeamId
+  for _, mem := range teams {
+    team := &v1.Team{}
+
+    team, err = r.GetTeamByTeamId(ctx, mem.Id)
+    if err != nil {
+      return teamsOut, err
+    }
+
+    teamsOut = append(teamsOut, team)
+  }
+
+  // return list of teams that user is in
+  return teamsOut, nil
 }

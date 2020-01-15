@@ -183,6 +183,19 @@ func main() {
   log.Printf("GetTeamsByUserId response: Code=%d, Body=%s\n\n", resp.StatusCode, body)
 
   // When implemented call getAllTeams()
+  req, err = http.NewRequest("GET", fmt.Sprintf("%s%s", *address, "/v1/teams?page=0&limit=10"), nil)
+  resp, err = http.DefaultClient.Do(req)
+  if err != nil {
+    log.Fatalf("failed to call GetTeams method: %v", err)
+  }
+  bodyBytes, err = ioutil.ReadAll(resp.Body)
+  resp.Body.Close()
+  if err != nil {
+    body = fmt.Sprintf("failed read GetTeams response body: %v", err)
+  } else {
+    body = string(bodyBytes)
+  }
+  log.Printf("GetTeams response: Code=%d, Body=%s\n\n", resp.StatusCode, body)
 
   // Call DeleteTeam
   req, err = http.NewRequest("DELETE", fmt.Sprintf("%s%s/%s", *address, "/v1/teams", createdTeamId), nil)

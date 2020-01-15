@@ -60,14 +60,11 @@ func (s *handler) CreateTeam(ctx context.Context, req *v1.TeamUpsertRequest) (*v
     return nil, err
   }
 
-  fmt.Fprintf(os.Stderr, "team from request: %v\n", req.Team)
-
   newId, err := s.repo.CreateTeam(ctx, req.Team)
   if err != nil {
     fmt.Fprintf(os.Stderr, "error from Repo CreateTeam: %v\n", newId)
     return nil, err
   }
-  fmt.Fprintf(os.Stderr, "Does repo work?\n")
 
   // publish team_created Event here
 
@@ -85,14 +82,11 @@ func (s *handler) DeleteTeam(ctx context.Context, req *v1.TeamDeleteRequest) (*v
     return nil, err
   }
 
-  fmt.Fprintf(os.Stderr, "id from request: %v\n", req.Id)
-
   teamRows, memRows, skillRows, err := s.repo.DeleteTeam(ctx, req.Id)
   if err != nil {
     fmt.Fprintf(os.Stderr, "error from Repo DeleteTeam: %v\n", req.Id)
     return nil, err
   }
-  fmt.Fprintf(os.Stderr, "Does repo work?\n")
 
   // publish team_created Event here
 
@@ -119,7 +113,6 @@ func (s *handler) AddMember(ctx context.Context, req *v1.MemberUpsertRequest) (*
     fmt.Fprintf(os.Stderr, "error from Repo AddMember: %v\n", req.Id)
     return nil, err
   }
-  fmt.Fprintf(os.Stderr, "Does repo work?\n")
 
   // publish team_created Event here
 
@@ -142,7 +135,6 @@ func (s *handler) RemoveMember(ctx context.Context, req *v1.MemberDeleteRequest)
     fmt.Fprintf(os.Stderr, "error from Repo RemoveMember: %v\n", req.Id)
     return nil, err
   }
-  fmt.Fprintf(os.Stderr, "Does repo work?\n")
 
   // publish team_created Event here
 
@@ -167,7 +159,6 @@ func (s *handler) UpsertTeamProject(ctx context.Context, req *v1.ProjectUpsertRe
     fmt.Fprintf(os.Stderr, "error from Repo UpsertProject: %v\n", req.Id)
     return nil, err
   }
-  fmt.Fprintf(os.Stderr, "Does repo work?\n")
 
   // publish team_created Event here
 
@@ -188,7 +179,6 @@ func (s *handler) GetTeamByTeamId(ctx context.Context, req *v1.GetByTeamIdReques
     fmt.Fprintf(os.Stderr, "error from Repo GetByTeamId: %v\n", req.Id)
     return nil, err
   }
-  fmt.Fprintf(os.Stderr, "Does repo work?\n")
 
   return &v1.GetByTeamIdResponse{
     Api:    "v1",
@@ -209,8 +199,6 @@ func (s *handler) GetTeamsByUserId(ctx context.Context, req *v1.GetByUserIdReque
     fmt.Fprintf(os.Stderr, "error from Repo GetByUserId: %v\n", req.Id)
     return nil, err
   }
-
-  fmt.Fprintf(os.Stderr, "checking teams on request where user has no teams: %v\n", teams)
 
   if len(teams) == 0 {
     return &v1.GetByUserIdResponse{
@@ -234,6 +222,8 @@ func (s *handler) GetTeams(ctx context.Context, req *v1.GetTeamsRequest) (*v1.Ge
   if err := s.checkAPI(req.Api); err != nil {
     return nil, err
   }
+
+  fmt.Fprintf(os.Stderr, "page: %v\nlimit: %v\n", req.Page, req.Limit)
 
   teams, err := s.repo.GetTeams(ctx, req.Page, req.Limit)
   if err != nil {
