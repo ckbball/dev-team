@@ -210,6 +210,17 @@ func (s *handler) GetTeamsByUserId(ctx context.Context, req *v1.GetByUserIdReque
     return nil, err
   }
 
+  fmt.Fprintf(os.Stderr, "checking teams on request where user has no teams: %v\n", teams)
+
+  if teams == nil {
+    return &v1.GetByUserIdResponse{
+      Api:    "v1",
+      Status: "User has no teams",
+      Teams:  teams,
+      Id:     req.Id,
+    }, nil
+  }
+
   return &v1.GetByUserIdResponse{
     Api:    "v1",
     Status: "Teams retrieived",
