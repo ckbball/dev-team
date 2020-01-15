@@ -211,6 +211,51 @@
         ]
       }
     },
+    "/{api}/teams": {
+      "get": {
+        "operationId": "GetTeams",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/teamGetTeamsResponse"
+            }
+          },
+          "404": {
+            "description": "Returned when resource doesn't exist",
+            "schema": {
+              "type": "string",
+              "format": "string"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "api",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "int64"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "int64"
+          }
+        ],
+        "tags": [
+          "TeamService"
+        ]
+      }
+    },
     "/{api}/teams/users/{id}": {
       "get": {
         "operationId": "GetTeamsByUserId",
@@ -311,6 +356,23 @@
           "type": "string"
         },
         "id": {
+          "type": "string"
+        },
+        "teams": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/teamTeam"
+          }
+        },
+        "status": {
+          "type": "string"
+        }
+      }
+    },
+    "teamGetTeamsResponse": {
+      "type": "object",
+      "properties": {
+        "api": {
           "type": "string"
         },
         "teams": {

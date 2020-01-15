@@ -556,4 +556,18 @@ func (r *teamRepository) GetTeams(ctx context.Context, page int64, limit int64) 
   // calculate page id
   // range over id's from page_id to page_id + limit calling GetTeamByTeamId and appending to teams var
   // return teams
+  item_id := 0
+  if page > 1 {
+    item_id = limit * int((page - 1))
+  }
+
+  teams := []*v1.Team{}
+
+  for i := item_id; i < item_id+limit; i++ {
+    team := r.GetTeamByTeamId(ctx, i)
+
+    teams = append(teams, team)
+  }
+
+  return teams, nil
 }
