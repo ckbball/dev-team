@@ -52,8 +52,6 @@ func (r *teamRepository) CreateTeam(ctx context.Context, team *v1.Team) (string,
   memberStmt := `INSERT INTO members (user_id, member_email, team_id, member_role) VALUES %s`
   skillStmt := `INSERT INTO skills (skill_name, team_id) VALUES %s`
 
-  fmt.Fprintf(os.Stderr, "In createteam repo\n")
-
   // start transaction
   tx, err := r.db.BeginTx(ctx, &sql.TxOptions{})
   if err != nil {
@@ -88,7 +86,6 @@ func (r *teamRepository) CreateTeam(ctx context.Context, team *v1.Team) (string,
 
   // create member sql statement
   memberStmt = fmt.Sprintf(memberStmt, strings.Join(memberStrings, ","))
-  fmt.Fprintf(os.Stderr, "memberStmt: %v\n", memberStmt)
 
   // insert members into members table including team_id field
   _, err = tx.Exec(memberStmt, memberArgs...)
@@ -109,7 +106,6 @@ func (r *teamRepository) CreateTeam(ctx context.Context, team *v1.Team) (string,
 
   // create skill sql statement
   skillStmt = fmt.Sprintf(skillStmt, strings.Join(skillStrings, ","))
-  fmt.Fprintf(os.Stderr, "skillStmt: %v\n", skillStmt)
 
   // insert skills into skills table including team_id field
   _, err = tx.Exec(skillStmt, skillArgs...)
@@ -140,7 +136,6 @@ func (r *teamRepository) DeleteTeam(ctx context.Context, id string) (int64, int6
   projStmt := `DELETE FROM projects WHERE team_id=?`
   langStmt := `DELETE FROM languages WHERE team_id=?`
 
-  fmt.Fprintf(os.Stderr, "In createteam repo\n")
   idAsInt, _ := strconv.Atoi(id)
 
   // start transaction
@@ -304,8 +299,6 @@ func (r *teamRepository) UpsertProject(ctx context.Context, teamId string, proje
   projStmt := `INSERT INTO projects (goal, project_name, github_link, team_id, complexity, duration) VALUES(?, ?, ?, ?, ?, ?)`
   langStmt := `INSERT INTO languages (lang_name, team_id) VALUES %s`
 
-  fmt.Fprintf(os.Stderr, "In createteam repo\n")
-
   // start transaction
   tx, err := r.db.BeginTx(ctx, &sql.TxOptions{})
   if err != nil {
@@ -340,7 +333,6 @@ func (r *teamRepository) UpsertProject(ctx context.Context, teamId string, proje
 
   // create lang sql statement
   langStmt = fmt.Sprintf(langStmt, strings.Join(langStrings, ","))
-  fmt.Fprintf(os.Stderr, "langStmt: %v\n", langStmt)
 
   // insert langs into langs table including team_id field
   _, err = tx.Exec(langStmt, langArgs...)

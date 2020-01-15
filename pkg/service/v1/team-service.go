@@ -223,7 +223,7 @@ func (s *handler) GetTeams(ctx context.Context, req *v1.GetTeamsRequest) (*v1.Ge
     return nil, err
   }
 
-  fmt.Fprintf(os.Stderr, "page: %v\nlimit: %v\n", req.Page, req.Limit)
+  fmt.Fprintf(os.Stderr, "\npage: %v\nlimit: %v\n", req.Page, req.Limit)
 
   teams, err := s.repo.GetTeams(ctx, req.Page, req.Limit)
   if err != nil {
