@@ -537,9 +537,9 @@ func (r *teamRepository) GetTeamsByUserId(ctx context.Context, id string) ([]*v1
 
   // iterate over each member, calling GetTeamByTeamId() with team_id of each team user is from
   for _, mem := range members {
-    team := &v1.Member{}
+    team := &v1.Team{}
 
-    team, err = r.GetTeamByTeamId(mem.Id)
+    team, err = r.GetTeamByTeamId(ctx, strconv.FormatInt(mem.Id, 10))
     if err != nil {
       return teams, err
     }
