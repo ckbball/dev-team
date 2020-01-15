@@ -15,8 +15,8 @@ import (
 type repository interface {
   CreateTeam(context.Context, *v1.Team) (string, error)
   DeleteTeam(context.Context, string) (int64, int64, int64, error)
-  GetTeamByTeamId(context.Context, string) (*v1.Team, *v1.Project, error)
-  // GetTeamsByUserId(context.Context, string) ([]v1.Team, error)
+  GetTeamByTeamId(context.Context, string) (*v1.Team, error)
+  GetTeamsByUserId(context.Context, string) ([]*v1.Team, error)
   AddMember(context.Context, *v1.MemberUpsertRequest) (string, error)
   RemoveMember(context.Context, string, string) (int64, error)
   UpsertProject(context.Context, string, *v1.Project) (int64, error)
@@ -359,7 +359,7 @@ func (r *teamRepository) UpsertProject(ctx context.Context, teamId string, proje
   return projectId, nil
 }
 
-func (r *teamRepository) GetTeamByTeamId(ctx context.Context, id string) (*v1.Team, *v1.Project, error) {
+func (r *teamRepository) GetTeamByTeamId(ctx context.Context, id string) (*v1.Team, error) {
   // prepare sql statements for team, member, skills, project, languages
   teamStmt := `SELECT leader, team_name, open_roles, size, last_active, id FROM teams WHERE id=?`
   memberStmt := `SELECT user_id, member_email, member_role FROM members WHERE team_id=?`
@@ -492,6 +492,67 @@ func (r *teamRepository) GetTeamByTeamId(ctx context.Context, id string) (*v1.Te
     return nil, nil, err
   }
 
+  team.Project = project
+
   // return id of newly inserted team and no error
-  return team, project, nil
+  return team, nil
+}
+
+func (r *teamRepository) GetTeamsByUserId(ctx context.Context, id string) ([]*v1.Team, error) {
+  // prepare sql statements for team, member, skills, project, languages
+  teamStmt := `SELECT leader, team_name, open_roles, size, last_active, id FROM teams WHERE id=?`
+  memberStmt := `SELECT team_id FROM members WHERE user_id=?`
+  skillStmt := `SELECT skill_name FROM skills WHERE team_id=?`
+  projStmt := `SELECT goal, project_name, github_link, complexity, duration FROM projects WHERE team_id=?`
+  langStmt := `SELECT lang_name FROM languages WHERE team_id=?`
+
+  teams := []*v1.Team{}
+  members := []*v1.Member{}
+  skills := []string{}
+  project := &v1.Project{}
+  languages := []string{}
+
+  // select all member rows where user_id = id
+  // for each row, call GetTeamByTeamId append response to teams var
+  // return teams
+
+  // execute member statement
+  memberRows, err := r.db.Query(memberStmt, id)
+  if err != nil {
+    fmt.Fprintf(os.Stderr, "error in members Query")
+    return nil, err
+  }
+
+  defer memberRows.Close()
+
+  // scan each member row into members variable
+  for memberRows.Next() {
+    s := &v1.Member{}
+
+    // scan members.team_id into member's Id field
+    err = memberRows.Scan(&s.Id)
+    if err != nil {
+      return nil, err
+    }
+    members = append(members, s)
+  }
+
+  if err = memberRows.Err(); err != nil {
+    return nil, err
+  }
+
+  // iterate over each member, calling GetTeamByTeamId() with team_id of each team user is from
+  for _, mem := range members {
+    team := &v1.Member{}
+
+    team, err = r.GetTeamByTeamId(mem.Id)
+    if err != nil {
+      return teams, err
+    }
+
+    teams = append(teams, team)
+  }
+
+  // return list of teams that user is in
+  return teams, nil
 }

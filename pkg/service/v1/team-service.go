@@ -191,11 +191,10 @@ func (s *handler) GetTeamByTeamId(ctx context.Context, req *v1.GetByTeamIdReques
   fmt.Fprintf(os.Stderr, "Does repo work?\n")
 
   return &v1.GetByTeamIdResponse{
-    Api:     "v1",
-    Status:  "Team Retrieved",
-    Team:    team,
-    Id:      team.Id,
-    Project: project,
+    Api:    "v1",
+    Status: "Team Retrieved",
+    Team:   team,
+    Id:     team.Id,
   }, nil
 }
 
