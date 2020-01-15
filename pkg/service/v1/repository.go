@@ -539,7 +539,7 @@ func (r *teamRepository) GetTeamsByUserId(ctx context.Context, id string) ([]*v1
   for _, mem := range members {
     team := &v1.Team{}
 
-    team, err = r.GetTeamByTeamId(ctx, strconv.FormatInt(mem.Id, 10))
+    team, err = r.GetTeamByTeamId(ctx, strconv.Itoa(int(mem.Id)))
     if err != nil {
       return teams, err
     }
