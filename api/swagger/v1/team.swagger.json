@@ -249,6 +249,25 @@
             "required": false,
             "type": "string",
             "format": "int64"
+          },
+          {
+            "name": "role",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "level",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "int64"
+          },
+          {
+            "name": "technology",
+            "in": "query",
+            "required": false,
+            "type": "string"
           }
         ],
         "tags": [

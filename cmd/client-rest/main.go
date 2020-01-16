@@ -183,7 +183,7 @@ func main() {
   log.Printf("GetTeamsByUserId response: Code=%d, Body=%s\n\n", resp.StatusCode, body)
 
   // When implemented call getAllTeams()
-  req, err = http.NewRequest("GET", fmt.Sprintf("%s%s", *address, "/v1/teams?page=0&limit=10"), nil)
+  req, err = http.NewRequest("GET", fmt.Sprintf("%s%s", *address, "/v1/teams?page=2&limit=5"), nil)
   resp, err = http.DefaultClient.Do(req)
   if err != nil {
     log.Fatalf("failed to call GetTeams method: %v", err)

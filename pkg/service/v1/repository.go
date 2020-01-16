@@ -8,7 +8,7 @@ import (
   "os"
   "strconv"
   "strings"
-  "time"
+  // "time"
 
   v1 "github.com/ckbball/dev-team/pkg/api/v1"
 )
@@ -21,7 +21,7 @@ type repository interface {
   AddMember(context.Context, *v1.MemberUpsertRequest) (string, error)
   RemoveMember(context.Context, string, string) (int64, error)
   UpsertProject(context.Context, string, *v1.Project) (int64, error)
-  GetTeams(context.Context, int64, int64) ([]*v1.Team, error)
+  GetTeams(context.Context, *v1.GetTeamsRequest) ([]*v1.Team, error)
 }
 
 type teamRepository struct {
@@ -306,6 +306,8 @@ func (r *teamRepository) UpsertProject(ctx context.Context, teamId string, proje
     return -1, err
   }
 
+  // if team has project already delete it and its languages
+
   // insert project into projects table capturing the id
   result, err := tx.Exec(projStmt, project.Description, project.Name, project.GithubLink, teamId, project.Complexity, project.Duration)
   if err != nil {
@@ -447,7 +449,7 @@ func (r *teamRepository) GetTeamByTeamId(ctx context.Context, id string) (*v1.Te
   err = projectRow.Scan(&project.Description, &project.Name, &project.GithubLink, &project.Complexity, &project.Duration)
   if err == sql.ErrNoRows {
     // for development this is fine
-    fmt.Fprintf(os.Stderr, "team has no project")
+    // fmt.Fprintf(os.Stderr, "team has no project")
   } else if err != nil {
     return nil, err
   }
@@ -545,24 +547,44 @@ func (r *teamRepository) GetTeamsByUserId(ctx context.Context, id string) ([]*v1
   return teams, nil
 }
 
-func (r *teamRepository) GetTeams(ctx context.Context, page int64, limit int64) ([]*v1.Team, error) {
+func (r *teamRepository) GetTeams(ctx context.Context, req *v1.GetTeamsRequest) ([]*v1.Team, error) {
   // calculate page id
   // range over id's from page_id to page_id + limit calling GetTeamByTeamId and appending to teams var
   // return teams
   var item_id int64
   item_id = 0
-  if page > 1 {
-    item_id = limit * (page - 1)
+  if req.Page > 1 {
+    item_id = req.Limit * (req.Page - 1)
   }
 
-  time_diff := time.Now().Unix() - 2592000
+  // time_diff := time.Now().Unix() - 2592000
 
-  teamStmt := `SELECT id FROM teams WHERE id > ? AND last_active > ? ORDER BY id ASC LIMIT ?`
+  // query for future in production
+  // `SELECT id FROM teams WHERE id > ? AND last_active > ? ORDER BY id ASC LIMIT ?`
+
+  // technology query param is frozen for now
+
+  teamStmt := ""
+  var teamRows *sql.Rows
+  var err error
+
+  if req.Role != "" {
+    teamStmt = `SELECT team_id FROM skills WHERE skill_name=? ORDER BY id ASC LIMIT ?`
+    teamRows, err = r.db.Query(teamStmt, req.Role, req.Limit*10)
+  } else if req.Level != 0 {
+    teamStmt = `SELECT team_id FROM projects WHERE complexity=? ORDER BY id ASC LIMIT ?`
+    teamRows, err = r.db.Query(teamStmt, req.Level, req.Limit)
+  } else {
+    teamStmt = `SELECT id FROM teams WHERE id > ? ORDER BY id ASC LIMIT ?`
+    teamRows, err = r.db.Query(teamStmt, item_id, req.Limit)
+  }
 
   teams := []*v1.Team{}
   teamsOut := []*v1.Team{}
 
-  teamRows, err := r.db.Query(teamStmt, item_id, time_diff, limit)
+  fmt.Fprintf(os.Stderr, "teamStmt: %v", teamStmt)
+  fmt.Fprintf(os.Stderr, "teamsOut: %v", teamsOut)
+
   if err != nil {
     fmt.Fprintf(os.Stderr, "error in teams Query")
     return nil, err
@@ -600,4 +622,5 @@ func (r *teamRepository) GetTeams(ctx context.Context, page int64, limit int64) 
 
   // return list of teams that user is in
   return teamsOut, nil
+  //return teams, nil
 }
