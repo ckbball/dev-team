@@ -60,6 +60,12 @@ func (s *handler) CreateTeam(ctx context.Context, req *v1.TeamUpsertRequest) (*v
     return nil, err
   }
 
+  // need to verify auth token is valid
+
+  // need to make sure team_name is unique
+
+  // need to make sure auth token user has less than 5 teams
+
   newId, err := s.repo.CreateTeam(ctx, req.Team)
   if err != nil {
     fmt.Fprintf(os.Stderr, "error from Repo CreateTeam: %v\n", newId)
@@ -81,6 +87,8 @@ func (s *handler) DeleteTeam(ctx context.Context, req *v1.TeamDeleteRequest) (*v
   if err := s.checkAPI(req.Api); err != nil {
     return nil, err
   }
+
+  // check auth token corresponds to person who owns team
 
   teamRows, memRows, skillRows, err := s.repo.DeleteTeam(ctx, req.Id)
   if err != nil {
@@ -105,8 +113,14 @@ func (s *handler) AddMember(ctx context.Context, req *v1.MemberUpsertRequest) (*
     return nil, err
   }
 
+  // need to check if auth token corresponds to person who owns team
+
+  // need to check if trying to add duplicate user
+
   // add in here somewhere maybe in future to get new member's name from their account as an additional
   // field
+
+  // need to grab user's id by email because team owner wont know user's id
 
   newId, err := s.repo.AddMember(ctx, req)
   if err != nil {
@@ -130,6 +144,8 @@ func (s *handler) RemoveMember(ctx context.Context, req *v1.MemberDeleteRequest)
     return nil, err
   }
 
+  // need to check if auth token belongs to team leader
+
   count, err := s.repo.RemoveMember(ctx, req.Id, req.MemberNumber)
   if err != nil {
     fmt.Fprintf(os.Stderr, "error from Repo RemoveMember: %v\n", req.Id)
@@ -151,8 +167,7 @@ func (s *handler) UpsertTeamProject(ctx context.Context, req *v1.ProjectUpsertRe
     return nil, err
   }
 
-  // add in here somewhere maybe in future to get new member's name from their account as an additional
-  // field
+  // need to check auth_token
 
   _, err := s.repo.UpsertProject(ctx, req.Id, req.Project)
   if err != nil {
@@ -193,6 +208,8 @@ func (s *handler) GetTeamsByUserId(ctx context.Context, req *v1.GetByUserIdReque
   if err := s.checkAPI(req.Api); err != nil {
     return nil, err
   }
+
+  // accessed only by logged in users
 
   teams, err := s.repo.GetTeamsByUserId(ctx, req.Id)
   if err != nil {
