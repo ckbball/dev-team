@@ -12,7 +12,7 @@ import (
   //"github.com/golang/protobuf/ptypes"
   // "encoding/json"
   // "github.com/ThreeDotsLabs/watermill"
-  "github.com/ThreeDotsLabs/watermill/message"
+  //"github.com/ThreeDotsLabs/watermill/message"
   // "github.com/go-redis/cache/v7"
   // "google.golang.org/grpc"
   "google.golang.org/grpc/codes"
@@ -27,17 +27,16 @@ const (
 )
 
 type handler struct {
-  repo       repository
-  subscriber message.Subscriber
-  publisher  message.Publisher
+  repo repository
+  //subscriber message.Subscriber
+  //publisher  message.Publisher
 }
 
-func NewTeamServiceServer(repo repository,
-  subscriber message.Subscriber, publisher message.Publisher) *handler {
+func NewTeamServiceServer(repo repository) *handler {
   return &handler{
-    repo:       repo,
-    subscriber: subscriber,
-    publisher:  publisher,
+    repo: repo,
+    //subscriber: subscriber,
+    //publisher:  publisher,
   }
 }
 

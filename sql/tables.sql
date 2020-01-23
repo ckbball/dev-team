@@ -1,3 +1,18 @@
+USE team;
+
+SET FOREIGN_KEY_CHECKS = 0;
+ 
+DROP TABLE IF EXISTS teams;
+
+DROP TABLE IF EXISTS projects;
+
+DROP TABLE IF EXISTS members;
+
+DROP TABLE IF EXISTS skills;
+
+DROP TABLE IF EXISTS languages;
+
+SET FOREIGN_KEY_CHECKS = 1;
 
 CREATE TABLE teams (
     id int not null PRIMARY key auto_increment,

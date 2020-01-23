@@ -8,8 +8,8 @@ import (
   "os"
 
   // mysql driver
-  "github.com/Shopify/sarama"
-  "github.com/ThreeDotsLabs/watermill-kafka/v2/pkg/kafka"
+  //"github.com/Shopify/sarama"
+  //"github.com/ThreeDotsLabs/watermill-kafka/v2/pkg/kafka"
   "github.com/go-redis/cache/v7"
   "github.com/go-redis/redis/v7"
   _ "github.com/go-sql-driver/mysql"
@@ -102,19 +102,20 @@ func RunServer() error {
   repository := v1.NewTeamRepository(db)
   // init pool of connections to redis cluster
   // redisPool := initRedis(cfg.RedisAddress)
+  /*
+     // Make subscriber config here
+     saramaSubscriberConfig := kafka.DefaultSaramaSubscriberConfig()
+     saramaSubscriberConfig.Consumer.Offsets.Initial = sarama.OffsetOldest
 
-  // Make subscriber config here
-  saramaSubscriberConfig := kafka.DefaultSaramaSubscriberConfig()
-  saramaSubscriberConfig.Consumer.Offsets.Initial = sarama.OffsetOldest
+     // Make subscriber pointer here
+     subscriber := v1.InitSubscriber(saramaSubscriberConfig)
 
-  // Make subscriber pointer here
-  subscriber := v1.InitSubscriber(saramaSubscriberConfig)
-
-  // Make publisher pointer here
-  publisher := v1.InitPublisher()
+     // Make publisher pointer here
+     publisher := v1.InitPublisher()
+  */
 
   // pass in fields of handler directly to method
-  v1API := v1.NewTeamServiceServer(repository, subscriber, publisher)
+  v1API := v1.NewTeamServiceServer(repository)
 
   // run http gateway
   go func() {
