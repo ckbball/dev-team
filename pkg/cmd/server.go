@@ -40,6 +40,9 @@ type Config struct {
   DatastoreDBSchema string
   // address for single redis node
   RedisAddress string
+
+  // user service address
+  UserSvcAddress string
 }
 
 // RunServer runs gRPC server and HTTP gateway
@@ -65,6 +68,7 @@ func RunServer() error {
     cfg.DatastoreDBPassword = os.Getenv("DB_PASSWORD")
     cfg.DatastoreDBSchema = os.Getenv("DB_SCHEMA")
     cfg.RedisAddress = os.Getenv("REDIS_ADDRESS")
+    cfg.UserSvcAddress = os.Getenv("USER_ADDRESS")
   }
 
   if len(cfg.GRPCPort) == 0 {
@@ -115,7 +119,7 @@ func RunServer() error {
   */
 
   // pass in fields of handler directly to method
-  v1API := v1.NewTeamServiceServer(repository)
+  v1API := v1.NewTeamServiceServer(repository, cfg.UserSvcAddress)
 
   // run http gateway
   go func() {

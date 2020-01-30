@@ -14,11 +14,13 @@ import (
   // "github.com/ThreeDotsLabs/watermill"
   //"github.com/ThreeDotsLabs/watermill/message"
   // "github.com/go-redis/cache/v7"
-  // "google.golang.org/grpc"
+  "google.golang.org/grpc"
   "google.golang.org/grpc/codes"
+  "google.golang.org/grpc/metadata"
   "google.golang.org/grpc/status"
 
   v1 "github.com/ckbball/dev-team/pkg/api/v1"
+  userProto "github.com/ckbball/dev-user/pkg/api/v1"
 )
 
 const (
@@ -27,14 +29,16 @@ const (
 )
 
 type handler struct {
-  repo repository
+  repo        repository
+  userSvcAddr string
   //subscriber message.Subscriber
   //publisher  message.Publisher
 }
 
-func NewTeamServiceServer(repo repository) *handler {
+func NewTeamServiceServer(repo repository, user string) *handler {
   return &handler{
-    repo: repo,
+    repo:        repo,
+    userSvcAddr: user,
     //subscriber: subscriber,
     //publisher:  publisher,
   }
@@ -50,6 +54,14 @@ func (s *handler) checkAPI(api string) error {
   return nil
 }
 
+func (s *handler) connectGrpc(addr string) (*grpc.ClientConn, error) {
+  conn, err := grpc.DialContext(context.Context, addr, grpc.WithInsecure())
+  if err != nil {
+    return nil, fmt.Errorf("could not connect user service: %+v", err)
+  }
+  return conn, nil
+}
+
 /* Team handles api calls to grpc method Team and REST endpoint: /v1/Team
 any error generated or nil if no errors.
 */
@@ -60,7 +72,18 @@ func (s *handler) CreateTeam(ctx context.Context, req *v1.TeamUpsertRequest) (*v
   }
 
   // need to verify auth token is valid
+  conn, _ := s.connectGrpc(s.userSvcAddr)
+  defer conn.Close()
 
+  md, _ := metadata.FromIncomingContext(ctx)
+  // grab user token from metadata
+  values := md.Get("Authorization")
+  reqToken := values[0]
+
+  resp, err := userProto.NewUserServiceClient(conn).ValidateToken(ctx, &userProto.ValidateRequest{Token: reqToken})
+  if !resp.Valid {
+    return nil, errors.New("Invalid Token")
+  }
   // need to make sure team_name is unique
 
   // need to make sure auth token user has less than 5 teams
@@ -202,11 +225,20 @@ func (s *handler) GetTeamByTeamId(ctx context.Context, req *v1.GetByTeamIdReques
   }, nil
 }
 
+// needs to be reworked
 func (s *handler) GetTeamsByUserId(ctx context.Context, req *v1.GetByUserIdRequest) (*v1.GetByUserIdResponse, error) {
   // check api version
   if err := s.checkAPI(req.Api); err != nil {
     return nil, err
   }
+
+  md, _ := metadata.FromIncomingContext(ctx)
+  // grab user token from metadata
+  values := md.Get("Authorization")
+
+  reqToken := values[0]
+
+  resp, err := userProto.NewUserServiceClient(conn).ValidateToken(ctx, &userProto.ValidateRequest{Token: reqToken})
 
   // accessed only by logged in users
 
@@ -219,7 +251,7 @@ func (s *handler) GetTeamsByUserId(ctx context.Context, req *v1.GetByUserIdReque
   if len(teams) == 0 {
     return &v1.GetByUserIdResponse{
       Api:    "v1",
-      Status: "User has no teams",
+      Status: "no",
       Teams:  teams,
       Id:     req.Id,
     }, nil
@@ -231,6 +263,106 @@ func (s *handler) GetTeamsByUserId(ctx context.Context, req *v1.GetByUserIdReque
     Teams:  teams,
     Id:     req.Id,
   }, nil
+
+  if len(values) > 0 {
+    // check if Authorization header contains token, if not return error
+    if values[0] != "undefined" {
+      // connect to grpc service
+      conn, _ := s.connectGrpc(s.userSvcAddr)
+      defer conn.Close()
+
+      // capture token from headers slice
+      reqToken := values[0]
+      // make grpc call to user service
+      resp, err := userProto.NewUserServiceClient(conn).ValidateToken(ctx, &userProto.ValidateRequest{Token: reqToken})
+
+      user, err := s.repo.GetById(claims.User.Id)
+      if err != nil {
+        return nil, errors.New("Invalid Token")
+      }
+
+      out := exportUserModel(user)
+
+      return &v1.AuthResponse{
+        Api:    apiVersion,
+        Status: "test",
+        User:   out,
+        // maybe in future add more data to response about the added user.
+      }, nil
+    } else {
+      return &v1.AuthResponse{
+        Api:    apiVersion,
+        Status: "no",
+      }, nil
+    }
+  } else {
+    return &v1.AuthResponse{
+      Api:    apiVersion,
+      Status: "no",
+    }, nil
+  }
+}
+
+// Fetches user's teams by accessing valid jwt token sent in the headers,
+func (s *handler) GetTeamsByCurrentUser(ctx context.Context, req *v1.GetByUserIdRequest) (*v1.GetByUserIdResponse, error) {
+  // check api version
+  if err := s.checkAPI(req.Api); err != nil {
+    return nil, err
+  }
+
+  // verify 'Authorization' header exists
+  if len(values) > 0 {
+    // check if Authorization header contains token, if not return error
+    if values[0] != "undefined" {
+      // connect to grpc service
+      conn, _ := s.connectGrpc(s.userSvcAddr)
+      defer conn.Close()
+
+      // capture token from headers slice
+      reqToken := values[0]
+      // make grpc call to user service
+      resp, err := userProto.NewUserServiceClient(conn).ValidateToken(ctx, &userProto.ValidateRequest{Token: reqToken})
+      // check the token is valid
+      if !resp.Valid {
+        return nil, errors.New("Invalid Token")
+      }
+
+      // call repo method to get teams sending it id you get back from token
+      teams, err := s.repo.GetTeamsByUserId(ctx, resp.UserId)
+      if err != nil {
+        // if error occured accessing db return it here
+        return nil, err
+      }
+      if len(teams) == 0 {
+        return &v1.GetByUserIdResponse{
+          Api:    apiVersion,
+          Status: "empty",
+          Teams:  teams,
+          Id:     req.Id,
+        }, nil
+      }
+
+      // return response struct
+      return &v1.GetByUserIdResponse{
+        Api:    apiVersion,
+        Status: "teams",
+        Teams:  teams,
+        // maybe in future add more data to response about the added user.
+      }, nil
+    } else {
+      // if 'Authorization' header exists but was not set properly
+      return &v1.GetByUserIdResponse{
+        Api:    apiVersion,
+        Status: "no",
+      }, nil
+    }
+  } else {
+    // if 'Authorization' header didn't exist
+    return &v1.GetByUserIdResponse{
+      Api:    apiVersion,
+      Status: "no",
+    }, nil
+  }
 }
 
 func (s *handler) GetTeams(ctx context.Context, req *v1.GetTeamsRequest) (*v1.GetTeamsResponse, error) {
