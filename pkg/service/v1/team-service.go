@@ -14,13 +14,10 @@ import (
   // "github.com/ThreeDotsLabs/watermill"
   //"github.com/ThreeDotsLabs/watermill/message"
   // "github.com/go-redis/cache/v7"
-  "google.golang.org/grpc"
   "google.golang.org/grpc/codes"
-  "google.golang.org/grpc/metadata"
   "google.golang.org/grpc/status"
 
   v1 "github.com/ckbball/dev-team/pkg/api/v1"
-  userProto "github.com/ckbball/dev-user/pkg/api/v1"
 )
 
 const (
@@ -54,14 +51,6 @@ func (s *handler) checkAPI(api string) error {
   return nil
 }
 
-func (s *handler) connectGrpc(addr string) (*grpc.ClientConn, error) {
-  conn, err := grpc.DialContext(context.Context, addr, grpc.WithInsecure())
-  if err != nil {
-    return nil, fmt.Errorf("could not connect user service: %+v", err)
-  }
-  return conn, nil
-}
-
 /* Team handles api calls to grpc method Team and REST endpoint: /v1/Team
 any error generated or nil if no errors.
 */
@@ -70,22 +59,18 @@ func (s *handler) CreateTeam(ctx context.Context, req *v1.TeamUpsertRequest) (*v
   if err := s.checkAPI(req.Api); err != nil {
     return nil, err
   }
-
-  // need to verify auth token is valid
-  conn, _ := s.connectGrpc(s.userSvcAddr)
-  defer conn.Close()
-
-  md, _ := metadata.FromIncomingContext(ctx)
-  // grab user token from metadata
-  values := md.Get("Authorization")
-  reqToken := values[0]
-
-  resp, err := userProto.NewUserServiceClient(conn).ValidateToken(ctx, &userProto.ValidateRequest{Token: reqToken})
-  if !resp.Valid {
-    return nil, errors.New("Invalid Token")
-  }
   // need to make sure team_name is unique
-
+  teamTemp, err := s.repo.GetTeamByTeamName(ctx, req.Team.Name)
+  fmt.Fprintf(os.Stderr, "Error: from Repo GetTeamByTeamName: %v\n", err)
+  fmt.Fprintf(os.Stderr, "Team: from Repo GetTeamByTeamName: %v\n", teamTemp)
+  if err != nil && err.Error() != "team Query: no matching record found" {
+    return nil, err
+  } else if teamTemp != nil {
+    return &v1.TeamUpsertResponse{
+      Api:    "v1",
+      Status: "error:duplicatename",
+    }, nil
+  }
   // need to make sure auth token user has less than 5 teams
 
   newId, err := s.repo.CreateTeam(ctx, req.Team)
@@ -109,8 +94,8 @@ func (s *handler) DeleteTeam(ctx context.Context, req *v1.TeamDeleteRequest) (*v
   if err := s.checkAPI(req.Api); err != nil {
     return nil, err
   }
-
-  // check auth token corresponds to person who owns team
+  // we have resp.Valid bool, if token valid
+  // we have resp.Id string, of user of the token sent
 
   teamRows, memRows, skillRows, err := s.repo.DeleteTeam(ctx, req.Id)
   if err != nil {
@@ -134,8 +119,6 @@ func (s *handler) AddMember(ctx context.Context, req *v1.MemberUpsertRequest) (*
   if err := s.checkAPI(req.Api); err != nil {
     return nil, err
   }
-
-  // need to check if auth token corresponds to person who owns team
 
   // need to check if trying to add duplicate user
 
@@ -166,8 +149,6 @@ func (s *handler) RemoveMember(ctx context.Context, req *v1.MemberDeleteRequest)
     return nil, err
   }
 
-  // need to check if auth token belongs to team leader
-
   count, err := s.repo.RemoveMember(ctx, req.Id, req.MemberNumber)
   if err != nil {
     fmt.Fprintf(os.Stderr, "error from Repo RemoveMember: %v\n", req.Id)
@@ -189,8 +170,6 @@ func (s *handler) UpsertTeamProject(ctx context.Context, req *v1.ProjectUpsertRe
     return nil, err
   }
 
-  // need to check auth_token
-
   _, err := s.repo.UpsertProject(ctx, req.Id, req.Project)
   if err != nil {
     fmt.Fprintf(os.Stderr, "error from Repo UpsertProject: %v\n", req.Id)
@@ -205,23 +184,23 @@ func (s *handler) UpsertTeamProject(ctx context.Context, req *v1.ProjectUpsertRe
   }, nil
 }
 
-func (s *handler) GetTeamByTeamId(ctx context.Context, req *v1.GetByTeamIdRequest) (*v1.GetByTeamIdResponse, error) {
+// change to team name
+func (s *handler) GetTeamByTeamName(ctx context.Context, req *v1.GetByTeamNameRequest) (*v1.GetByTeamNameResponse, error) {
   // check api version
   if err := s.checkAPI(req.Api); err != nil {
     return nil, err
   }
+  /*
+     team, err := s.repo.GetTeamByTeamName(ctx, req.Name)
+     if err != nil {
+       fmt.Fprintf(os.Stderr, "error from Repo GetByTeamName: %v\n", req.Name)
+       return nil, err
+     }
+  */
 
-  team, err := s.repo.GetTeamByTeamId(ctx, req.Id)
-  if err != nil {
-    fmt.Fprintf(os.Stderr, "error from Repo GetByTeamId: %v\n", req.Id)
-    return nil, err
-  }
-
-  return &v1.GetByTeamIdResponse{
+  return &v1.GetByTeamNameResponse{
     Api:    "v1",
-    Status: "Team Retrieved",
-    Team:   team,
-    Id:     team.Id,
+    Status: "deprecated",
   }, nil
 }
 
@@ -232,16 +211,6 @@ func (s *handler) GetTeamsByUserId(ctx context.Context, req *v1.GetByUserIdReque
     return nil, err
   }
 
-  md, _ := metadata.FromIncomingContext(ctx)
-  // grab user token from metadata
-  values := md.Get("Authorization")
-
-  reqToken := values[0]
-
-  resp, err := userProto.NewUserServiceClient(conn).ValidateToken(ctx, &userProto.ValidateRequest{Token: reqToken})
-
-  // accessed only by logged in users
-
   teams, err := s.repo.GetTeamsByUserId(ctx, req.Id)
   if err != nil {
     fmt.Fprintf(os.Stderr, "error from Repo GetByUserId: %v\n", req.Id)
@@ -251,7 +220,7 @@ func (s *handler) GetTeamsByUserId(ctx context.Context, req *v1.GetByUserIdReque
   if len(teams) == 0 {
     return &v1.GetByUserIdResponse{
       Api:    "v1",
-      Status: "no",
+      Status: "empty",
       Teams:  teams,
       Id:     req.Id,
     }, nil
@@ -263,44 +232,6 @@ func (s *handler) GetTeamsByUserId(ctx context.Context, req *v1.GetByUserIdReque
     Teams:  teams,
     Id:     req.Id,
   }, nil
-
-  if len(values) > 0 {
-    // check if Authorization header contains token, if not return error
-    if values[0] != "undefined" {
-      // connect to grpc service
-      conn, _ := s.connectGrpc(s.userSvcAddr)
-      defer conn.Close()
-
-      // capture token from headers slice
-      reqToken := values[0]
-      // make grpc call to user service
-      resp, err := userProto.NewUserServiceClient(conn).ValidateToken(ctx, &userProto.ValidateRequest{Token: reqToken})
-
-      user, err := s.repo.GetById(claims.User.Id)
-      if err != nil {
-        return nil, errors.New("Invalid Token")
-      }
-
-      out := exportUserModel(user)
-
-      return &v1.AuthResponse{
-        Api:    apiVersion,
-        Status: "test",
-        User:   out,
-        // maybe in future add more data to response about the added user.
-      }, nil
-    } else {
-      return &v1.AuthResponse{
-        Api:    apiVersion,
-        Status: "no",
-      }, nil
-    }
-  } else {
-    return &v1.AuthResponse{
-      Api:    apiVersion,
-      Status: "no",
-    }, nil
-  }
 }
 
 // Fetches user's teams by accessing valid jwt token sent in the headers,
@@ -310,59 +241,28 @@ func (s *handler) GetTeamsByCurrentUser(ctx context.Context, req *v1.GetByUserId
     return nil, err
   }
 
-  // verify 'Authorization' header exists
-  if len(values) > 0 {
-    // check if Authorization header contains token, if not return error
-    if values[0] != "undefined" {
-      // connect to grpc service
-      conn, _ := s.connectGrpc(s.userSvcAddr)
-      defer conn.Close()
-
-      // capture token from headers slice
-      reqToken := values[0]
-      // make grpc call to user service
-      resp, err := userProto.NewUserServiceClient(conn).ValidateToken(ctx, &userProto.ValidateRequest{Token: reqToken})
-      // check the token is valid
-      if !resp.Valid {
-        return nil, errors.New("Invalid Token")
-      }
-
-      // call repo method to get teams sending it id you get back from token
-      teams, err := s.repo.GetTeamsByUserId(ctx, resp.UserId)
-      if err != nil {
-        // if error occured accessing db return it here
-        return nil, err
-      }
-      if len(teams) == 0 {
-        return &v1.GetByUserIdResponse{
-          Api:    apiVersion,
-          Status: "empty",
-          Teams:  teams,
-          Id:     req.Id,
-        }, nil
-      }
-
-      // return response struct
-      return &v1.GetByUserIdResponse{
-        Api:    apiVersion,
-        Status: "teams",
-        Teams:  teams,
-        // maybe in future add more data to response about the added user.
-      }, nil
-    } else {
-      // if 'Authorization' header exists but was not set properly
-      return &v1.GetByUserIdResponse{
-        Api:    apiVersion,
-        Status: "no",
-      }, nil
-    }
-  } else {
-    // if 'Authorization' header didn't exist
+  // call repo method to get teams sending it id you get back from token
+  teams, err := s.repo.GetTeamsByUserId(ctx, req.Id)
+  if err != nil {
+    // if error occured accessing db return it here
+    return nil, err
+  }
+  if len(teams) == 0 {
     return &v1.GetByUserIdResponse{
       Api:    apiVersion,
-      Status: "no",
+      Status: "empty",
+      Teams:  teams,
+      Id:     req.Id,
     }, nil
   }
+
+  // return response struct
+  return &v1.GetByUserIdResponse{
+    Api:    apiVersion,
+    Status: "teams",
+    Teams:  teams,
+    // maybe in future add more data to response about the added user.
+  }, nil
 }
 
 func (s *handler) GetTeams(ctx context.Context, req *v1.GetTeamsRequest) (*v1.GetTeamsResponse, error) {
@@ -382,14 +282,14 @@ func (s *handler) GetTeams(ctx context.Context, req *v1.GetTeamsRequest) (*v1.Ge
   if len(teams) == 0 {
     return &v1.GetTeamsResponse{
       Api:    "v1",
-      Status: "No teams found",
+      Status: "empty",
       Teams:  teams,
     }, nil
   }
 
   return &v1.GetTeamsResponse{
     Api:    "v1",
-    Status: "Teams retrieived",
+    Status: "teams",
     Teams:  teams,
   }, nil
 }

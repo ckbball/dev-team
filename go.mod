@@ -6,6 +6,7 @@ require (
 	github.com/Shopify/sarama v1.24.1
 	github.com/ThreeDotsLabs/watermill v1.1.0
 	github.com/ThreeDotsLabs/watermill-kafka/v2 v2.1.0
+	github.com/ckbball/dev-user v0.0.0-20200128235309-bebec97417f0
 	github.com/go-redis/cache/v7 v7.0.2
 	github.com/go-redis/redis/v7 v7.0.0-beta.5
 	github.com/go-sql-driver/mysql v1.5.0

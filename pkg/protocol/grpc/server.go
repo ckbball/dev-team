@@ -10,6 +10,8 @@ import (
   "google.golang.org/grpc"
 
   v1 "github.com/ckbball/dev-team/pkg/api/v1"
+  "github.com/ckbball/dev-team/pkg/logger"
+  "github.com/ckbball/dev-team/pkg/protocol/grpc/middleware"
 )
 
 // RunServer runs gRPC service to publish Team service
@@ -19,8 +21,12 @@ func RunServer(ctx context.Context, v1API v1.TeamServiceServer, port string) err
     return err
   }
 
+  opts := []grpc.ServerOption{}
+
+  opts = middleware.AddLogging(logger.Log, opts)
+
   // register service
-  server := grpc.NewServer()
+  server := grpc.NewServer(opts...)
   v1.RegisterTeamServiceServer(server, v1API)
 
   // graceful shutdown

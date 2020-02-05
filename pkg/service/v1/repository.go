@@ -17,6 +17,7 @@ type repository interface {
   CreateTeam(context.Context, *v1.Team) (string, error)
   DeleteTeam(context.Context, string) (int64, int64, int64, error)
   GetTeamByTeamId(context.Context, string) (*v1.Team, error)
+  GetTeamByTeamName(context.Context, string) (*v1.Team, error)
   GetTeamsByUserId(context.Context, string) ([]*v1.Team, error)
   AddMember(context.Context, *v1.MemberUpsertRequest) (string, error)
   RemoveMember(context.Context, string, string) (int64, error)
@@ -52,6 +53,8 @@ func (r *teamRepository) CreateTeam(ctx context.Context, team *v1.Team) (string,
   memberStmt := `INSERT INTO members (user_id, member_email, team_id, member_role) VALUES %s`
   skillStmt := `INSERT INTO skills (skill_name, team_id) VALUES %s`
 
+  //
+
   // start transaction
   tx, err := r.db.BeginTx(ctx, &sql.TxOptions{})
   if err != nil {
@@ -71,27 +74,32 @@ func (r *teamRepository) CreateTeam(ctx context.Context, team *v1.Team) (string,
     return "team insertId()", err
   }
 
-  // create bulk array insert values.
-  memberStrings := []string{}
-  memberArgs := []interface{}{}
-  // iterate over each member and construct sql arguments
-  for _, w := range team.Members {
-    memberStrings = append(memberStrings, "(?, ?, ?, ?)")
+  // decide whether to add owner to member list in initial creation
+  if len(team.Members) > 0 {
+    // create bulk array insert values.
+    memberStrings := []string{}
+    memberArgs := []interface{}{}
+    // iterate over each member and construct sql arguments
+    for _, w := range team.Members {
+      memberStrings = append(memberStrings, "(?, ?, ?, ?)")
 
-    memberArgs = append(memberArgs, w.Id)
-    memberArgs = append(memberArgs, w.Email)
-    memberArgs = append(memberArgs, teamId)
-    memberArgs = append(memberArgs, w.Role)
-  }
+      memberArgs = append(memberArgs, w.Id)
+      memberArgs = append(memberArgs, w.Email)
+      memberArgs = append(memberArgs, teamId)
+      memberArgs = append(memberArgs, w.Role)
+    }
 
-  // create member sql statement
-  memberStmt = fmt.Sprintf(memberStmt, strings.Join(memberStrings, ","))
+    // create member sql statement
+    memberStmt = fmt.Sprintf(memberStmt, strings.Join(memberStrings, ","))
 
-  // insert members into members table including team_id field
-  _, err = tx.Exec(memberStmt, memberArgs...)
-  if err != nil {
-    tx.Rollback()
-    return "Exec member stmt", err
+    fmt.Fprintf(os.Stderr, "memberStmt in CreateTeam: %v\n", memberStmt)
+
+    // insert members into members table including team_id field
+    _, err = tx.Exec(memberStmt, memberArgs...)
+    if err != nil {
+      tx.Rollback()
+      return "Exec member stmt", err
+    }
   }
 
   // create bulk array insert values.
@@ -353,6 +361,147 @@ func (r *teamRepository) UpsertProject(ctx context.Context, teamId string, proje
 
   // return id of newly inserted team and no error
   return projectId, nil
+}
+
+func (r *teamRepository) GetTeamByTeamName(ctx context.Context, name string) (*v1.Team, error) {
+  // prepare sql statements for team, member, skills, project, languages
+  teamStmt := `SELECT leader, team_name, open_roles, size, last_active, id FROM teams WHERE team_name=?`
+  memberStmt := `SELECT user_id, member_email, member_role FROM members WHERE team_id=?`
+  skillStmt := `SELECT skill_name FROM skills WHERE team_id=?`
+  projStmt := `SELECT goal, project_name, github_link, complexity, duration FROM projects WHERE team_id=?`
+  langStmt := `SELECT lang_name FROM languages WHERE team_id=?`
+
+  team := &v1.Team{}
+  members := []*v1.Member{}
+  skills := []string{}
+  project := &v1.Project{}
+  languages := []string{}
+
+  // start transaction
+  tx, err := r.db.BeginTx(ctx, &sql.TxOptions{})
+  if err != nil {
+    fmt.Fprintf(os.Stderr, "error in BeginTx")
+    return nil, err
+  }
+
+  name = strings.ToLower(name)
+
+  // execute team sql statement
+  row := tx.QueryRow(teamStmt, name)
+
+  // scan fields into team
+  err = row.Scan(&team.Leader, &team.Name, &team.OpenRoles, &team.Size, &team.LastActive, &team.Id)
+  if err == sql.ErrNoRows {
+    return nil, errors.New("team Query: no matching record found")
+  } else if err != nil {
+    return nil, err
+  }
+
+  // execute member statement
+  memberRows, err := tx.Query(memberStmt, team.Id)
+  if err != nil {
+    fmt.Fprintf(os.Stderr, "error in members Query")
+    return nil, err
+  }
+
+  defer memberRows.Close()
+
+  // scan each member row into members variable
+  for memberRows.Next() {
+    s := &v1.Member{}
+
+    err = memberRows.Scan(&s.Id, &s.Email, &s.Role)
+    if err != nil {
+      return nil, err
+    }
+    members = append(members, s)
+  }
+
+  if err = memberRows.Err(); err != nil {
+    return nil, err
+  }
+
+  // add retrieved members to team
+  team.Members = members
+
+  // execute skills statement query
+  skillRows, err := tx.Query(skillStmt, team.Id)
+  if err != nil {
+    fmt.Fprintf(os.Stderr, "error in skill Query")
+    return nil, err
+  }
+
+  //scan skills
+  defer skillRows.Close()
+
+  // scan each member row into skills variable
+  for skillRows.Next() {
+    s := ""
+
+    err = skillRows.Scan(&s)
+    if err != nil {
+      return nil, err
+    }
+    skills = append(skills, s)
+  }
+
+  if err = skillRows.Err(); err != nil {
+    return nil, err
+  }
+
+  // add retrieved skills to team
+  team.Skills = skills
+
+  // execute project statement query
+  projectRow := tx.QueryRow(projStmt, team.Id)
+
+  // scan project
+  err = projectRow.Scan(&project.Description, &project.Name, &project.GithubLink, &project.Complexity, &project.Duration)
+  if err == sql.ErrNoRows {
+    // for development this is fine
+    // fmt.Fprintf(os.Stderr, "team has no project")
+  } else if err != nil {
+    return nil, err
+  }
+
+  // execute languages statement query
+  languagesRows, err := tx.Query(langStmt, team.Id)
+  if err != nil {
+    fmt.Fprintf(os.Stderr, "error in languages Query")
+    return nil, err
+  }
+  // scan languages
+  defer languagesRows.Close()
+
+  // scan each languages row into languages variable
+  for languagesRows.Next() {
+    s := ""
+
+    err = languagesRows.Scan(&s)
+    if err != nil {
+      return nil, err
+    }
+    languages = append(languages, s)
+  }
+
+  if err = languagesRows.Err(); err != nil {
+    return nil, err
+  }
+
+  // add retrieved languagess to team
+  project.Languages = languages
+
+  // commit transaction
+  err = tx.Commit()
+  if err != nil {
+    fmt.Fprintf(os.Stderr, "error in Commit()")
+    return nil, err
+  }
+
+  team.Project = project
+
+  // return id of newly inserted team and no error
+  return team, nil
 }
 
 func (r *teamRepository) GetTeamByTeamId(ctx context.Context, id string) (*v1.Team, error) {

@@ -66,7 +66,7 @@ service TeamService {
     };
   }
 
-  rpc GetTeamByTeamId(GetByTeamIdRequest) returns (GetByTeamIdResponse) {
+  rpc GetTeamByTeamName(GetByTeamNameRequest) returns (GetByTeamNameResponse) {
     option (google.api.http) = {
       get: "/{api}/teams/{id}"
     };
@@ -152,12 +152,12 @@ message ProjectUpsertResponse {
   string status = 2;
 }
 
-message GetByTeamIdRequest {
+message GetByTeamNameRequest {
   string api = 1;
-  string id = 2;
+  string name = 2;
 }
 
-message GetByTeamIdResponse {
+message GetByTeamNameResponse {
   string api = 1;
   string id = 2;
   Team team = 3;
@@ -207,6 +207,7 @@ message Member {
   string email = 1;
   int32 id = 2;
   string role = 3;
+
 }
 
 message Project {

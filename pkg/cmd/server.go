@@ -6,6 +6,7 @@ import (
   "flag"
   "fmt"
   "os"
+  "strconv"
 
   // mysql driver
   //"github.com/Shopify/sarama"
@@ -15,6 +16,7 @@ import (
   _ "github.com/go-sql-driver/mysql"
   "github.com/vmihailenco/msgpack/v4"
 
+  "github.com/ckbball/dev-team/pkg/logger"
   teamGrpc "github.com/ckbball/dev-team/pkg/protocol/grpc"
   "github.com/ckbball/dev-team/pkg/protocol/rest"
   v1 "github.com/ckbball/dev-team/pkg/service/v1"
@@ -40,6 +42,11 @@ type Config struct {
   DatastoreDBSchema string
   // address for single redis node
   RedisAddress string
+
+  // LogLevel is global log level: Debug(-1), Info(0), Warn(1), Error(2), DPanic(3), Panic(4), Fatal(5)
+  LogLevel int
+  // LogTimeFormat is print time format for logger e.g. 2006-01-02T15:04:05Z07:00
+  LogTimeFormat string
 
   // user service address
   UserSvcAddress string
@@ -69,6 +76,8 @@ func RunServer() error {
     cfg.DatastoreDBSchema = os.Getenv("DB_SCHEMA")
     cfg.RedisAddress = os.Getenv("REDIS_ADDRESS")
     cfg.UserSvcAddress = os.Getenv("USER_ADDRESS")
+    cfg.LogLevel, _ = strconv.Atoi(os.Getenv("LOG_LEVEL"))
+    cfg.LogTimeFormat = os.Getenv("LOG_TIME")
   }
 
   if len(cfg.GRPCPort) == 0 {
@@ -104,6 +113,12 @@ func RunServer() error {
 
   // create repository
   repository := v1.NewTeamRepository(db)
+
+  // initialize logger
+  if err := logger.Init(cfg.LogLevel, cfg.LogTimeFormat); err != nil {
+    return fmt.Errorf("failed to initialize logger: %v", err)
+  }
+
   // init pool of connections to redis cluster
   // redisPool := initRedis(cfg.RedisAddress)
   /*
