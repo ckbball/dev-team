@@ -67,9 +67,7 @@ service TeamService {
   }
 
   rpc GetTeamByTeamName(GetByTeamNameRequest) returns (GetByTeamNameResponse) {
-    option (google.api.http) = {
-      get: "/{api}/teams/{id}"
-    };
+
   }
 
   rpc GetTeamsByUserId(GetByUserIdRequest) returns (GetByUserIdResponse) {

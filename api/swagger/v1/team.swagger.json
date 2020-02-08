@@ -211,6 +211,43 @@
         ]
       }
     },
+    "/{api}/myteams": {
+      "get": {
+        "operationId": "GetTeamsByCurrentUser",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/teamGetByUserIdResponse"
+            }
+          },
+          "404": {
+            "description": "Returned when resource doesn't exist",
+            "schema": {
+              "type": "string",
+              "format": "string"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "api",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "id",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "TeamService"
+        ]
+      }
+    },
     "/{api}/teams": {
       "get": {
         "operationId": "GetTeams",
@@ -311,47 +348,10 @@
           "TeamService"
         ]
       }
-    },
-    "/{api}/teams/{id}": {
-      "get": {
-        "operationId": "GetTeamByTeamId",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/teamGetByTeamIdResponse"
-            }
-          },
-          "404": {
-            "description": "Returned when resource doesn't exist",
-            "schema": {
-              "type": "string",
-              "format": "string"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "api",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          }
-        ],
-        "tags": [
-          "TeamService"
-        ]
-      }
     }
   },
   "definitions": {
-    "teamGetByTeamIdResponse": {
+    "teamGetByTeamNameResponse": {
       "type": "object",
       "properties": {
         "api": {

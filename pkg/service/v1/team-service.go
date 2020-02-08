@@ -71,8 +71,15 @@ func (s *handler) CreateTeam(ctx context.Context, req *v1.TeamUpsertRequest) (*v
       Status: "error:duplicatename",
     }, nil
   }
-  // need to make sure auth token user has less than 5 teams
+  // team name is now unique
 
+  // need to make sure auth token user has less than 5 teams
+  // get number of teams user owns
+  // if > 5 deny request
+  // else continue
+
+  // call repo func to create a new team
+  fmt.Fprintf(os.Stderr, "State Team: about to call CreateTeam: %v\n", teamTemp)
   newId, err := s.repo.CreateTeam(ctx, req.Team)
   if err != nil {
     fmt.Fprintf(os.Stderr, "error from Repo CreateTeam: %v\n", newId)
@@ -81,6 +88,7 @@ func (s *handler) CreateTeam(ctx context.Context, req *v1.TeamUpsertRequest) (*v
 
   // publish team_created Event here
 
+  // return successful response
   return &v1.TeamUpsertResponse{
     Api:    "v1",
     Status: "Upserted",
