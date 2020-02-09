@@ -92,6 +92,7 @@ service TeamService {
 message TeamUpsertRequest {
   string api = 1;
   Team team = 2;
+  string user_id = 3;
 }
 
 message TeamUpsertResponse {
@@ -102,7 +103,8 @@ message TeamUpsertResponse {
 
 message TeamDeleteRequest {
   string api = 1;
-  string id = 2;
+  string team_id = 2;
+  string user_id = 3;
 }
 
 message TeamDeleteResponse {
@@ -116,10 +118,11 @@ message TeamDeleteResponse {
 
 message MemberUpsertRequest {
   string api = 1;
-  string id = 2;
+  string team_id = 2;
   string member_id = 3;
   string member_email = 4;
   string role = 5;
+  string user_id = 6;
 }
 
 message MemberUpsertResponse {
@@ -130,8 +133,10 @@ message MemberUpsertResponse {
 
 message MemberDeleteRequest {
   string api = 1;
-  string id = 2;
+  string team_id = 2;
   string member_number = 3;
+  string member_email = 4;
+  string user_id = 5;
 }
 
 message MemberDeleteResponse {
@@ -143,7 +148,8 @@ message MemberDeleteResponse {
 message ProjectUpsertRequest {
   Project project = 1;
   string api = 2;
-  string id = 3;
+  string team_id = 3;
+  string user_id = 4;
 }
 message ProjectUpsertResponse {
   string api = 1;

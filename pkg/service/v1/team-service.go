@@ -75,7 +75,18 @@ func (s *handler) CreateTeam(ctx context.Context, req *v1.TeamUpsertRequest) (*v
 
   // need to make sure auth token user has less than 5 teams
   // get number of teams user owns
-  // if > 5 deny request
+  count, err := s.repo.CountUserTeams(ctx, req.UserId)
+  if err != nil || count == -1 {
+    return nil, err
+  }
+  // if >= 5 deny request
+  if count >= 5 {
+    return &v1.TeamUpsertResponse{
+      Api:    "v1",
+      Status: "error:maxteamcount",
+    }, nil
+  }
+
   // else continue
 
   // call repo func to create a new team
@@ -102,16 +113,26 @@ func (s *handler) DeleteTeam(ctx context.Context, req *v1.TeamDeleteRequest) (*v
   if err := s.checkAPI(req.Api); err != nil {
     return nil, err
   }
-  // we have resp.Valid bool, if token valid
-  // we have resp.Id string, of user of the token sent
 
-  teamRows, memRows, skillRows, err := s.repo.DeleteTeam(ctx, req.Id)
+  // Check if user owns team correlating to req.TeamId, using req.UserId
+  owns, err := s.repo.CheckIfUserOwnsTeam(ctx, req.UserId, req.TeamId)
   if err != nil {
-    fmt.Fprintf(os.Stderr, "error from Repo DeleteTeam: %v\n", req.Id)
+    fmt.Fprintf(os.Stderr, "error from Repo CheckIfUserOwnsTeam: %v\n", req.TeamId)
+    return nil, err
+  }
+  if owns != nil {
+    fmt.Fprintf(os.Stderr, "user %v doesn't own team: %v\n", req.UserId, req.TeamId)
+    return nil, errors.New("invalid")
+  }
+
+  // delete the team corresponding to TeamId
+  teamRows, memRows, skillRows, err := s.repo.DeleteTeam(ctx, req.TeamId)
+  if err != nil {
+    fmt.Fprintf(os.Stderr, "error from Repo DeleteTeam: %v\n", req.TeamId)
     return nil, err
   }
 
-  // publish team_created Event here
+  // publish team_deleted Event here
 
   return &v1.TeamDeleteResponse{
     Api:     "v1",
@@ -128,16 +149,19 @@ func (s *handler) AddMember(ctx context.Context, req *v1.MemberUpsertRequest) (*
     return nil, err
   }
 
+  // check user owns team
+
   // need to check if trying to add duplicate user
+  // does member_id exist in members table where team_id == req.TeamId
 
   // add in here somewhere maybe in future to get new member's name from their account as an additional
   // field
 
-  // need to grab user's id by email because team owner wont know user's id
+  // need to grab user's id by email because team owner wont know user's id fullfil this in edge?
 
   newId, err := s.repo.AddMember(ctx, req)
   if err != nil {
-    fmt.Fprintf(os.Stderr, "error from Repo AddMember: %v\n", req.Id)
+    fmt.Fprintf(os.Stderr, "error from Repo AddMember: %v\n", req.TeamId)
     return nil, err
   }
 

@@ -23,6 +23,7 @@ type repository interface {
   RemoveMember(context.Context, string, string) (int64, error)
   UpsertProject(context.Context, string, *v1.Project) (int64, error)
   GetTeams(context.Context, *v1.GetTeamsRequest) ([]*v1.Team, error)
+  CountUserTeams(context.Context, string) (int, error) // in: userId as string || out: Number of teams user owns as int, error
 }
 
 type teamRepository struct {
@@ -246,7 +247,7 @@ func (r *teamRepository) AddMember(ctx context.Context, req *v1.MemberUpsertRequ
   convert, _ := strconv.ParseInt(req.MemberId, 10, 64)
 
   // insert team into teams table capturing the id
-  memResult, err := tx.Exec(memberStmt, convert, req.Id, req.MemberEmail, req.Role)
+  memResult, err := tx.Exec(memberStmt, convert, req.TeamId, req.MemberEmail, req.Role)
   if err != nil {
     tx.Rollback()
     return "", err
@@ -735,7 +736,7 @@ func (r *teamRepository) GetTeams(ctx context.Context, req *v1.GetTeamsRequest) 
   fmt.Fprintf(os.Stderr, "teamsOut: %v", teamsOut)
 
   if err != nil {
-    fmt.Fprintf(os.Stderr, "error in teams Query")
+    fmt.Fprintf(os.Stderr, "error in GetTeams Query")
     return nil, err
   }
 
@@ -772,4 +773,54 @@ func (r *teamRepository) GetTeams(ctx context.Context, req *v1.GetTeamsRequest) 
   // return list of teams that user is in
   return teamsOut, nil
   //return teams, nil
+}
+
+// takes a userId and searches db for how many teams this user owns
+// returns number of teams owned and an error
+func (r *teamRepository) CountUserTeams(ctx context.Context, userId string) (int, error) {
+  countStmt := `SELECT COUNT( * ) FROM teams WHERE leader=?`
+
+  rows, err := r.db.Query(countStmt, userId)
+  if err != nil {
+    fmt.Fprintf(os.Stderr, "error in CountUserTeams Query")
+    return nil, err
+  }
+  count, err := checkCount(rows * sql.Rows)
+  if err != nil {
+    return -1, err
+  }
+  return count, nil
+}
+
+// takes a userId and searches db for how many teams this user owns
+// returns number of teams owned and an error
+func (r *teamRepository) CheckUserOwnsTeam(ctx context.Context, userId, teamId string) (bool, error) {
+  // select leader FROM teams WHERE leader=userId AND id=teamId
+  checkStmt := `SELECT leader FROM teams WHERE leader=? AND id=?`
+  // get row
+  row := r.db.QueryRow(checkStmt, userId, teamId)
+  var leader string
+  // scan fields into team
+  err = row.Scan(&leader)
+  if err == sql.ErrNoRows {
+    return nil, errors.New("CheckUserOwnsTeam Query: no matching record found")
+  } else if err != nil {
+    return nil, err
+  }
+
+  // if row exists user owns the team and return true else return false
+  return true, nil
+}
+
+// ---------------------------- HELPER FUNCTIONS -------------------------------
+
+func (r *teamRepository) checkCount(rows *sql.Rows) (int, error) {
+  var count int
+  for rows.Next() {
+    err := rows.Scan(&count)
+    if err != nil {
+      return -1, err
+    }
+  }
+  return count
 }
