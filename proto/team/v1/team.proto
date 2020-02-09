@@ -2,91 +2,25 @@ syntax = "proto3";
 
 package team;
 
-import "google/api/annotations.proto";
-import "protoc-gen-swagger/options/annotations.proto";
-
-option (grpc.gateway.protoc_gen_swagger.options.openapiv2_swagger) = {
-  info: {
-    title: "team service";
-    version: "1.0";
-    contact: {
-      name: "team service";
-      url: "https://github.com/ckbball/dev-team";
-      email: "blah@happy.org";
-    };
-  };
-  schemes: HTTP;
-  schemes: HTTPS;
-  consumes: "application/json";
-  produces: "application/json";
-  responses: {
-    key: "404";
-    value: {
-      description: "Returned when resource doesn't exist";
-      schema: {
-        json_schema: {
-          type: STRING;
-        }
-      }
-    }
-  }
-};
 
 service TeamService {
-  rpc CreateTeam(TeamUpsertRequest) returns (TeamUpsertResponse) {
-    option (google.api.http) = {
-      post: "/v1/teams",
-      body: "*"
-    };
-  }
+  rpc CreateTeam(TeamUpsertRequest) returns (TeamUpsertResponse) {}
 
-  rpc DeleteTeam(TeamDeleteRequest) returns (TeamDeleteResponse) {
-    option (google.api.http) = {
-      delete: "/v1/teams/{id}"
-    };
-  }
+  rpc DeleteTeam(TeamDeleteRequest) returns (TeamDeleteResponse) {}
 
-  rpc AddMember(MemberUpsertRequest) returns (MemberUpsertResponse) {
-    option (google.api.http) = {
-      post: "/v1/teams/{id}/members",
-      body: "*"
-    };
-  }
+  rpc AddMember(MemberUpsertRequest) returns (MemberUpsertResponse) {}
 
-  rpc RemoveMember(MemberDeleteRequest) returns (MemberDeleteResponse) {
-    option (google.api.http) = {
-      delete: "/v1/teams/{id}/members/{member_number}",
-    };
-  }
+  rpc RemoveMember(MemberDeleteRequest) returns (MemberDeleteResponse) {}
 
-  rpc UpsertTeamProject(ProjectUpsertRequest) returns (ProjectUpsertResponse) {
-    option (google.api.http) = {
-      post: "/v1/teams/{id}/project",
-      body: "*"
-    };
-  }
+  rpc UpsertTeamProject(ProjectUpsertRequest) returns (ProjectUpsertResponse) {}
 
-  rpc GetTeamByTeamName(GetByTeamNameRequest) returns (GetByTeamNameResponse) {
+  rpc GetTeamByTeamName(GetByTeamNameRequest) returns (GetByTeamNameResponse) {}
 
-  }
+  rpc GetTeamsByUserId(GetByUserIdRequest) returns (GetByUserIdResponse) {}
 
-  rpc GetTeamsByUserId(GetByUserIdRequest) returns (GetByUserIdResponse) {
-    option (google.api.http) = {
-      get: "/{api}/teams/users/{id}"
-    };
-  }
+  rpc GetTeamsByCurrentUser(GetByUserIdRequest) returns (GetByUserIdResponse) {}
 
-  rpc GetTeamsByCurrentUser(GetByUserIdRequest) returns (GetByUserIdResponse) {
-    option (google.api.http) = {
-      get: "/{api}/myteams"
-    };
-  }
-
-  rpc GetTeams(GetTeamsRequest) returns (GetTeamsResponse) {
-    option (google.api.http) = {
-      get: "/{api}/teams"
-    };
-  }
+  rpc GetTeams(GetTeamsRequest) returns (GetTeamsResponse) {}
 }
 
 message TeamUpsertRequest {

@@ -204,7 +204,7 @@ func (s *handler) UpsertTeamProject(ctx context.Context, req *v1.ProjectUpsertRe
     return nil, err
   }
 
-  _, err := s.repo.UpsertProject(ctx, req.Id, req.Project)
+  _, err := s.repo.UpsertProject(ctx, req.TeamId, req.Project)
   if err != nil {
     fmt.Fprintf(os.Stderr, "error from Repo UpsertProject: %v\n", req.Id)
     return nil, err
@@ -224,6 +224,7 @@ func (s *handler) GetTeamByTeamName(ctx context.Context, req *v1.GetByTeamNameRe
   if err := s.checkAPI(req.Api); err != nil {
     return nil, err
   }
+
   /*
      team, err := s.repo.GetTeamByTeamName(ctx, req.Name)
      if err != nil {
