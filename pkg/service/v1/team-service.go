@@ -265,7 +265,8 @@ func (s *handler) GetTeamByTeamName(ctx context.Context, req *v1.GetByTeamNameRe
 
   return &v1.GetByTeamNameResponse{
     Api:    "v1",
-    Status: "deprecated",
+    Status: "found",
+    Team:   team,
   }, nil
 }
 
