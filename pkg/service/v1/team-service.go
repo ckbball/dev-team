@@ -149,13 +149,45 @@ func (s *handler) AddMember(ctx context.Context, req *v1.MemberUpsertRequest) (*
     return nil, err
   }
 
-  // check user owns team
+  // Check if team is at max size
+  max, err := s.repo.CheckTeamSize(ctx, req.TeamId)
+  if err != nil {
+    fmt.Fprintf(os.Stderr, "Error AddMember: Repo CheckIfUserOwnsTeam: %v\n", req.TeamId)
+    return nil, err
+  }
+  if max {
+    fmt.Fprintf(os.Stderr, "max team size: %v\n", req.UserId, req.TeamId)
+    return &v1.MemberUpsertResponse{
+      Api:    "v1",
+      Status: "error:maxmembercount",
+    }, nil
+  }
+
+  // Check if user owns team correlating to req.TeamId, using req.UserId
+  owns, err := s.repo.CheckUserOwnsTeam(ctx, req.UserId, req.TeamId)
+  if err != nil {
+    fmt.Fprintf(os.Stderr, "Error AddMember: Repo CheckIfUserOwnsTeam: %v\n", req.TeamId)
+    return nil, err
+  }
+  if !owns {
+    fmt.Fprintf(os.Stderr, "user %v doesn't own team: %v\n", req.UserId, req.TeamId)
+    return nil, errors.New("invalid")
+  }
 
   // need to check if trying to add duplicate user
   // does member_id exist in members table where team_id == req.TeamId
-
-  // add in here somewhere maybe in future to get new member's name from their account as an additional
-  // field
+  exists, err := s.repo.CheckMemberExists(ctx, req.MemberId, req.TeamId)
+  if err != nil {
+    fmt.Fprintf(os.Stderr, "Error AddMember: Repo CheckMemberExists: %v\n", req.TeamId)
+    return nil, err
+  }
+  if exists {
+    fmt.Fprintf(os.Stderr, "user %v exists on team: %v\n", req.UserId, req.TeamId)
+    return &v1.MemberUpsertResponse{
+      Api:    "v1",
+      Status: "error:exists",
+    }, nil
+  }
 
   // need to grab user's id by email because team owner wont know user's id fullfil this in edge?
 

@@ -25,6 +25,8 @@ type repository interface {
   GetTeams(context.Context, *v1.GetTeamsRequest) ([]*v1.Team, error)
   CountUserTeams(context.Context, string) (int, error) // in: userId as string || out: Number of teams user owns as int, error
   CheckUserOwnsTeam(context.Context, string, string) (bool, error)
+  CheckMemberExists(context.Context, string, string) (bool, error)
+  CheckTeamSize(context.Context, string) (bool, error)
 }
 
 type teamRepository struct {
@@ -238,6 +240,7 @@ func (r *teamRepository) AddMember(ctx context.Context, req *v1.MemberUpsertRequ
   // need to change this to update
 
   memberStmt := `INSERT INTO members (user_id, team_id, member_email, member_role) VALUES (?, ?, ?, ?)`
+  teamStmt := `UPDATE teams SET open_roles = open_roles - 1 WHERE id=?`
 
   // start transaction
   tx, err := r.db.BeginTx(ctx, &sql.TxOptions{})
@@ -255,6 +258,13 @@ func (r *teamRepository) AddMember(ctx context.Context, req *v1.MemberUpsertRequ
   }
   // gather the id of the inserted team
   memId, err := memResult.LastInsertId()
+  if err != nil {
+    tx.Rollback()
+    return "", err
+  }
+
+  // decrement number of open roles on specific team
+  _, err = tx.Exec(teamStmt, req.TeamId)
   if err != nil {
     tx.Rollback()
     return "", err
@@ -799,7 +809,7 @@ func (r *teamRepository) CountUserTeams(ctx context.Context, userId string) (int
 }
 
 // takes a userId and searches db for how many teams this user owns
-// returns number of teams owned and an error
+// returns true if user owns team false if not
 func (r *teamRepository) CheckUserOwnsTeam(ctx context.Context, userId, teamId string) (bool, error) {
   // select leader FROM teams WHERE leader=userId AND id=teamId
   checkStmt := `SELECT leader FROM teams WHERE leader=? AND id=?`
@@ -816,6 +826,51 @@ func (r *teamRepository) CheckUserOwnsTeam(ctx context.Context, userId, teamId s
 
   // if row exists user owns the team and return true else return false
   return true, nil
+}
+
+// takes a userId and teamId and searches db if user is already on team
+// returns true if user on team false if not
+func (r *teamRepository) CheckMemberExists(ctx context.Context, userId, teamId string) (bool, error) {
+  // select role FROM members WHERE user_id=userId AND team_id=teamId
+  checkStmt := `SELECT member_role FROM members WHERE user_id=? AND team_id=?`
+  // get row
+  row := r.db.QueryRow(checkStmt, userId, teamId)
+  var role string
+  // scan fields into team
+  err := row.Scan(&role)
+  if err == sql.ErrNoRows {
+    fmt.Fprintf(os.Stderr, "rows checkMember exists: \n")
+    return false, nil
+  } else if err != nil {
+    return false, err
+  }
+
+  // if row exists user is a member on team
+  return true, nil
+}
+
+// takes a userId and teamId and searches db if user is already on team
+// returns true if user on team false if not
+func (r *teamRepository) CheckTeamSize(ctx context.Context, teamId string) (bool, error) {
+  // select role FROM members WHERE user_id=userId AND team_id=teamId
+  checkStmt := `SELECT open_roles FROM teams WHERE id=?`
+  // get row
+  row := r.db.QueryRow(checkStmt, teamId)
+  var spots int
+  // scan fields into team
+  err := row.Scan(&spots)
+  if err == sql.ErrNoRows {
+    return false, nil
+  } else if err != nil {
+    return false, err
+  }
+
+  // if open_roles is less than zero that means team has reached max size
+  if spots < 1 {
+    return true, nil
+  }
+
+  return false, nil
 }
 
 // ---------------------------- HELPER FUNCTIONS -------------------------------
