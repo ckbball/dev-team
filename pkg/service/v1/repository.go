@@ -779,14 +779,19 @@ func (r *teamRepository) GetTeams(ctx context.Context, req *v1.GetTeamsRequest) 
 // takes a userId and searches db for how many teams this user owns
 // returns number of teams owned and an error
 func (r *teamRepository) CountUserTeams(ctx context.Context, userId string) (int, error) {
-  countStmt := `SELECT COUNT( * ) FROM teams WHERE leader=?`
+  countStmt := `SELECT COUNT(*) FROM teams WHERE leader=?`
 
+  fmt.Fprintf(os.Stderr, "request userID: %v\n", userId)
   rows, err := r.db.Query(countStmt, userId)
   if err != nil {
     fmt.Fprintf(os.Stderr, "error in CountUserTeams Query")
     return -1, err
   }
-  count, err := r.checkCount(rows)
+  defer rows.Close()
+  rows.Next()
+  var count int
+  err = rows.Scan(&count)
+  fmt.Fprintf(os.Stderr, "count: %v\n", count)
   if err != nil {
     return -1, err
   }
