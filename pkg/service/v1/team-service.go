@@ -181,13 +181,15 @@ func (s *handler) RemoveMember(ctx context.Context, req *v1.MemberDeleteRequest)
     return nil, err
   }
 
-  count, err := s.repo.RemoveMember(ctx, req.Id, req.MemberNumber)
+  // check req.UserId owns team=req.TeamId
+
+  count, err := s.repo.RemoveMember(ctx, req.TeamId, req.MemberNumber)
   if err != nil {
     fmt.Fprintf(os.Stderr, "error from Repo RemoveMember: %v\n", req.Id)
     return nil, err
   }
 
-  // publish team_created Event here
+  // publish MemberRemoved Event here
 
   return &v1.MemberDeleteResponse{
     Api:    "v1",
