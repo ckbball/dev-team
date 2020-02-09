@@ -2,7 +2,7 @@ package v1
 
 import (
   "context"
-  //"errors"
+  "errors"
   "fmt"
   // "log"
   // "strconv"
@@ -115,12 +115,12 @@ func (s *handler) DeleteTeam(ctx context.Context, req *v1.TeamDeleteRequest) (*v
   }
 
   // Check if user owns team correlating to req.TeamId, using req.UserId
-  owns, err := s.repo.CheckIfUserOwnsTeam(ctx, req.UserId, req.TeamId)
+  owns, err := s.repo.CheckUserOwnsTeam(ctx, req.UserId, req.TeamId)
   if err != nil {
     fmt.Fprintf(os.Stderr, "error from Repo CheckIfUserOwnsTeam: %v\n", req.TeamId)
     return nil, err
   }
-  if owns != nil {
+  if !owns {
     fmt.Fprintf(os.Stderr, "user %v doesn't own team: %v\n", req.UserId, req.TeamId)
     return nil, errors.New("invalid")
   }
@@ -140,7 +140,7 @@ func (s *handler) DeleteTeam(ctx context.Context, req *v1.TeamDeleteRequest) (*v
     Teams:   teamRows,
     Skills:  skillRows,
     Members: memRows,
-    Id:      req.Id,
+    Id:      req.TeamId,
   }, nil
 }
 func (s *handler) AddMember(ctx context.Context, req *v1.MemberUpsertRequest) (*v1.MemberUpsertResponse, error) {
@@ -185,7 +185,7 @@ func (s *handler) RemoveMember(ctx context.Context, req *v1.MemberDeleteRequest)
 
   count, err := s.repo.RemoveMember(ctx, req.TeamId, req.MemberNumber)
   if err != nil {
-    fmt.Fprintf(os.Stderr, "error from Repo RemoveMember: %v\n", req.Id)
+    fmt.Fprintf(os.Stderr, "error from Repo RemoveMember: %v\n", req.TeamId)
     return nil, err
   }
 
@@ -206,7 +206,7 @@ func (s *handler) UpsertTeamProject(ctx context.Context, req *v1.ProjectUpsertRe
 
   _, err := s.repo.UpsertProject(ctx, req.TeamId, req.Project)
   if err != nil {
-    fmt.Fprintf(os.Stderr, "error from Repo UpsertProject: %v\n", req.Id)
+    fmt.Fprintf(os.Stderr, "error from Repo UpsertProject: %v\n", req.TeamId)
     return nil, err
   }
 

@@ -18,7 +18,7 @@ import (
 
   "github.com/ckbball/dev-team/pkg/logger"
   teamGrpc "github.com/ckbball/dev-team/pkg/protocol/grpc"
-  "github.com/ckbball/dev-team/pkg/protocol/rest"
+  // "github.com/ckbball/dev-team/pkg/protocol/rest"
   v1 "github.com/ckbball/dev-team/pkg/service/v1"
 )
 
@@ -137,9 +137,11 @@ func RunServer() error {
   v1API := v1.NewTeamServiceServer(repository, cfg.UserSvcAddress)
 
   // run http gateway
-  go func() {
-    _ = rest.RunServer(ctx, cfg.GRPCPort, cfg.HTTPPort)
-  }()
+  /*
+    go func() {
+      _ = rest.RunServer(ctx, cfg.GRPCPort, cfg.HTTPPort)
+    }()
+  */
 
   return teamGrpc.RunServer(ctx, v1API, cfg.GRPCPort)
 }

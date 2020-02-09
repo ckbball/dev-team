@@ -24,6 +24,7 @@ type repository interface {
   UpsertProject(context.Context, string, *v1.Project) (int64, error)
   GetTeams(context.Context, *v1.GetTeamsRequest) ([]*v1.Team, error)
   CountUserTeams(context.Context, string) (int, error) // in: userId as string || out: Number of teams user owns as int, error
+  CheckUserOwnsTeam(context.Context, string, string) (bool, error)
 }
 
 type teamRepository struct {
@@ -783,9 +784,9 @@ func (r *teamRepository) CountUserTeams(ctx context.Context, userId string) (int
   rows, err := r.db.Query(countStmt, userId)
   if err != nil {
     fmt.Fprintf(os.Stderr, "error in CountUserTeams Query")
-    return nil, err
+    return -1, err
   }
-  count, err := checkCount(rows * sql.Rows)
+  count, err := r.checkCount(rows)
   if err != nil {
     return -1, err
   }
@@ -801,11 +802,11 @@ func (r *teamRepository) CheckUserOwnsTeam(ctx context.Context, userId, teamId s
   row := r.db.QueryRow(checkStmt, userId, teamId)
   var leader string
   // scan fields into team
-  err = row.Scan(&leader)
+  err := row.Scan(&leader)
   if err == sql.ErrNoRows {
-    return nil, errors.New("CheckUserOwnsTeam Query: no matching record found")
+    return false, errors.New("CheckUserOwnsTeam Query: no matching record found")
   } else if err != nil {
-    return nil, err
+    return false, err
   }
 
   // if row exists user owns the team and return true else return false
@@ -822,5 +823,5 @@ func (r *teamRepository) checkCount(rows *sql.Rows) (int, error) {
       return -1, err
     }
   }
-  return count
+  return count, nil
 }
