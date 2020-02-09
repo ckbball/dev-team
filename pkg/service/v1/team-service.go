@@ -257,13 +257,11 @@ func (s *handler) GetTeamByTeamName(ctx context.Context, req *v1.GetByTeamNameRe
     return nil, err
   }
 
-  /*
-     team, err := s.repo.GetTeamByTeamName(ctx, req.Name)
-     if err != nil {
-       fmt.Fprintf(os.Stderr, "error from Repo GetByTeamName: %v\n", req.Name)
-       return nil, err
-     }
-  */
+  team, err := s.repo.GetTeamByTeamName(ctx, req.Name)
+  if err != nil {
+    fmt.Fprintf(os.Stderr, "error from Repo GetByTeamName: %v\n", req.Name)
+    return nil, err
+  }
 
   return &v1.GetByTeamNameResponse{
     Api:    "v1",
