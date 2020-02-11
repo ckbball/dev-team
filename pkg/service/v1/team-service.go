@@ -292,6 +292,7 @@ func (s *handler) GetTeamsByUserId(ctx context.Context, req *v1.GetByUserIdReque
   teams, err := s.repo.GetTeamsByUserId(ctx, req.Id)
   if err != nil {
     fmt.Fprintf(os.Stderr, "error from Repo GetByUserId: %v\n", req.Id)
+    fmt.Fprintf(os.Stderr, "error: %v\n", err)
     return nil, err
   }
 

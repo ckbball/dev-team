@@ -677,7 +677,9 @@ func (r *teamRepository) GetTeamsByUserId(ctx context.Context, id string) ([]*v1
 
   // prepare necessary variables
   teams := []*v1.Team{}
-  members := []*v1.Member{}
+  members := []int{}
+
+  fmt.Fprintf(os.Stderr, "id: %v\n")
 
   // select all member rows where user_id = id
   // for each row, call GetTeamByTeamId append response to teams var
@@ -694,15 +696,17 @@ func (r *teamRepository) GetTeamsByUserId(ctx context.Context, id string) ([]*v1
 
   // scan each member row into members variable
   for memberRows.Next() {
-    s := &v1.Member{}
+    var s int
 
     // scan members.team_id into member's Id field
-    err = memberRows.Scan(&s.Id)
+    err = memberRows.Scan(&s)
     if err != nil {
       return nil, err
     }
     members = append(members, s)
   }
+
+  fmt.Fprintf(os.Stderr, "members: %v\n", members)
 
   if err = memberRows.Err(); err != nil {
     return nil, err
@@ -712,7 +716,8 @@ func (r *teamRepository) GetTeamsByUserId(ctx context.Context, id string) ([]*v1
   for _, mem := range members {
     team := &v1.Team{}
 
-    team, err = r.GetTeamByTeamId(ctx, strconv.Itoa(int(mem.Id)))
+    team, err = r.GetTeamByTeamId(ctx, strconv.Itoa(int(mem)))
+    fmt.Fprintf(os.Stderr, "team: %v\n", team)
     if err != nil {
       return teams, err
     }
