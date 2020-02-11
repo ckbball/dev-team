@@ -319,6 +319,9 @@ func (r *teamRepository) UpsertProject(ctx context.Context, teamId string, proje
   projStmt := `INSERT INTO projects (goal, project_name, github_link, team_id, complexity, duration) VALUES(?, ?, ?, ?, ?, ?)`
   langStmt := `INSERT INTO languages (lang_name, team_id) VALUES %s`
 
+  projDel := `DELETE FROM projects WHERE team_id=? `
+  langDel := `DELETE FROM languages WHERE team_id=? `
+
   // start transaction
   tx, err := r.db.BeginTx(ctx, &sql.TxOptions{})
   if err != nil {
@@ -327,6 +330,19 @@ func (r *teamRepository) UpsertProject(ctx context.Context, teamId string, proje
   }
 
   // if team has project already delete it and its languages
+  // delete languages from specified team
+  _, err = tx.Exec(langDel, teamId)
+  if err != nil {
+    tx.Rollback()
+    return -1, err
+  }
+
+  // delete projects from specified team
+  _, err = tx.Exec(projDel, teamId)
+  if err != nil {
+    tx.Rollback()
+    return -1, err
+  }
 
   // insert project into projects table capturing the id
   result, err := tx.Exec(projStmt, project.Description, project.Name, project.GithubLink, teamId, project.Complexity, project.Duration)

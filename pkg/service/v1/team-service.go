@@ -236,7 +236,19 @@ func (s *handler) UpsertTeamProject(ctx context.Context, req *v1.ProjectUpsertRe
     return nil, err
   }
 
-  _, err := s.repo.UpsertProject(ctx, req.TeamId, req.Project)
+  // Check if user owns team correlating to req.TeamId, using req.UserId
+  owns, err := s.repo.CheckUserOwnsTeam(ctx, req.UserId, req.TeamId)
+  if err != nil {
+    fmt.Fprintf(os.Stderr, "Error AddMember: Repo CheckIfUserOwnsTeam: %v\n", req.TeamId)
+    return nil, err
+  }
+  if !owns {
+    fmt.Fprintf(os.Stderr, "user %v doesn't own team: %v\n", req.UserId, req.TeamId)
+    return nil, errors.New("invalid")
+  }
+
+  // call repo method to create project
+  _, err = s.repo.UpsertProject(ctx, req.TeamId, req.Project)
   if err != nil {
     fmt.Fprintf(os.Stderr, "error from Repo UpsertProject: %v\n", req.TeamId)
     return nil, err
