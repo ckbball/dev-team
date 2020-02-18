@@ -764,8 +764,8 @@ func (r *teamRepository) GetTeams(ctx context.Context, req *v1.GetTeamsRequest) 
   teams := []*v1.Team{}
   teamsOut := []*v1.Team{}
 
-  fmt.Fprintf(os.Stderr, "teamStmt: %v", teamStmt)
-  fmt.Fprintf(os.Stderr, "teamsOut: %v", teamsOut)
+  fmt.Fprintf(os.Stderr, "request in repo: %v\n", req)
+  fmt.Fprintf(os.Stderr, "teamStmt: %v\n", teamStmt)
 
   if err != nil {
     fmt.Fprintf(os.Stderr, "error in GetTeams Query")
@@ -786,6 +786,8 @@ func (r *teamRepository) GetTeams(ctx context.Context, req *v1.GetTeamsRequest) 
     teams = append(teams, s)
   }
 
+  fmt.Fprintf(os.Stderr, "teams after 1st scan: %v\n", teams)
+
   if err = teamRows.Err(); err != nil {
     return nil, err
   }
@@ -801,6 +803,8 @@ func (r *teamRepository) GetTeams(ctx context.Context, req *v1.GetTeamsRequest) 
 
     teamsOut = append(teamsOut, team)
   }
+
+  fmt.Fprintf(os.Stderr, "teamsOut before return: %v\n", teamsOut)
 
   // return list of teams that user is in
   return teamsOut, nil
